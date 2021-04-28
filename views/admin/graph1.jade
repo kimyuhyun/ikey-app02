@@ -1,0 +1,46 @@
+extends layout
+
+block content
+    div(id='graph' style='width: 100%; height: 500px;')
+    table(id='datatable', style='display: none;')
+        tr
+            th 일자
+            th 총방문자
+            th 재방문자
+            th 신규방문자
+        - each row in rows
+            tr
+                td #{ row.date }
+                td #{ row.total }
+                td #{ row.re }
+                td #{ row.new }
+                
+                
+    script(src='https://code.highcharts.com/highcharts.js')
+    script(src='https://code.highcharts.com/modules/data.js')
+    script(src='https://code.highcharts.com/modules/exporting.js')
+    script.
+        $(document).ready(function() {
+            $('#graph').highcharts({
+                data: {
+                    table: 'datatable'
+                },
+                chart: {
+                    type: 'spline',
+                },
+                title: {
+                    text: "전체방문자",
+                },
+                yAxis: {
+                    labels: {
+                        formatter: function() {
+                            return this.value;
+                        }
+                    },
+                    allowDecimals: false,
+                    title: {
+                        text: '명'
+                    }
+                },
+            });
+        });

@@ -1,0 +1,46 @@
+extends layout
+
+block content
+    div(id='graph' style='width: 100%; height: 500px;')
+    table(id='datatable', style='display: none;')
+        tr
+            th 시간
+            th 오늘
+            th 어제
+            th 1주일전
+        - each row in rows
+            tr
+                td #{ row.time }
+                td #{ row.today }
+                td #{ row.yesterday }
+                td #{ row.weekago }
+                
+                
+    script(src='https://code.highcharts.com/highcharts.js')
+    script(src='https://code.highcharts.com/modules/data.js')
+    script(src='https://code.highcharts.com/modules/exporting.js')
+    script.
+        $(document).ready(function() {
+            $('#graph').highcharts({
+                data: {
+                    table: 'datatable'
+                },
+                chart: {
+                    type: 'spline',
+                },
+                title: {
+                    text: "시간대별 트래픽",
+                },
+                yAxis: {
+                    labels: {
+                        formatter: function() {
+                            return this.value;
+                        }
+                    },
+                    allowDecimals: false,
+                    title: {
+                        text: '명'
+                    }
+                },
+            });
+        });

@@ -1,0 +1,146 @@
+extends layout
+
+block content
+    div(class='row')
+        div(class='col-12 col-md-6 offset-md-3')
+            div(id='form')
+                div(class='w2ui-page page-0')
+                    div(class='w2ui-field w2ui-span2')
+                        label 아이디
+                        div
+                            input(name='ID', readonly)
+
+                    div(class='w2ui-field w2ui-span2')
+                        label 패스워드
+                        div
+                            input(name='PASS1', type='password')
+
+                    div(class='w2ui-field w2ui-span2')
+                        label 이름
+                        div
+                            input(name='NAME1')
+
+                    div(class='w2ui-field w2ui-span2')
+                        label 사진
+                        div
+                            input(name='UPLOADED_FILES')
+
+                    div(class='w2ui-field w2ui-span2')                    
+                        label
+                        div
+                            input(name='FILES')
+
+                div(class='w2ui-buttons')
+                    button(class='w2ui-btn w2ui-btn-blue' name='save' id='save') 입력
+
+
+
+
+
+
+
+
+
+
+    //- 들여쓰기 중요함
+    script.
+        var table = 'MEMB_tbl';
+        var fileLimitCount = 1;	//세팅 해줘야함..
+        var config = {
+            form: {
+                name: 'form',
+                url: {
+                    get: '/crud/view?table=' + table,
+                },
+                fields: [
+                    { name: 'ID', type: 'text', required: true },	//세팅 해줘야함
+                    { name: 'PASS1', type: 'password', },	//세팅 해줘야함
+                    { name: 'NAME1', type: 'text', required: true },	//세팅 해줘야함
+                    { name: 'UPLOADED_FILES', type: 'enum' },	//세팅 해줘야함
+                    { name: 'FILES', type: 'file' },	//세팅 해줘야함
+                ],
+                record: { 
+                    ID: '!{ row.ID }',
+                    NAME1: '!{ row.NAME1 }',
+                },
+                actions: {
+                    save: function () {
+                        var errors = this.validate();
+                        if (errors.length > 0) {
+                            return;
+                        }
+
+                        var fileCount = this.record.UPLOADED_FILES.length + this.record.FILES.length;
+                        if (fileCount > fileLimitCount) {
+                            w2alert('파일은 ' + fileLimitCount + '개까지 등록 가능합니다.');
+                            return;
+                        }
+                        
+                        for (var i = 0; i < fileLimitCount; i++) {
+                            try {
+                                eval("this.record.FILENAME"+parseInt(i)+" = this.record.UPLOADED_FILES["+i+"].img;");
+                            } catch (e) {
+                                eval("this.record.FILENAME"+parseInt(i)+" = '';");
+                            }
+                        }
+
+                        //필수값
+                        this.record.IDX = "#{ row.IDX }";
+                        this.record.table = table;
+                        //
+                        
+                        if (this.record.PASS1 == '') {
+                            delete this.record.PASS1;
+                        }
+                        
+                        var formData = new FormData();
+                        var self = this;
+                        for (var key in this.record) {
+                            if (key != 'FILES') {
+                                formData.append(key, self.record[key]);
+                            }
+                        }
+                        
+                        for (var obj of this.record['FILES']) {
+                            formData.append('FILES', obj.file);                            
+                        }
+                        
+                        axios.post('/crud/write', formData).then(function(res) {
+                            console.dir(res.data);
+                            w2alert(res.data.msg).done(function() {
+                                location.reload();
+                            });
+                            
+                        });
+                    }
+                },
+                onError: function(e) {
+                    console.log(e.xhr.responseText);
+                },
+            }
+        };
+        $(function () {
+            $('#form').w2form(config.form);
+            $('#FILES').w2field('file', {
+                max: fileLimitCount,
+                silent: true,
+            });
+                        
+            if ("!{ row.FILENAME0 }" != '') {
+                var fileLink = "!{ row.FILENAME0 }".split('|')[0];
+                var fileName = "!{ row.FILENAME0 }".split('|')[1];
+                
+                if (fileName != '') {
+                	var html = '';
+                	html += '<a href="!{ hostname }/'+fileLink+'" target="_blank">';
+                	html += fileName;
+                	html += '</a>';
+                
+                	$('#UPLOADED_FILES').w2field().set({
+                		img: fileLink+"|"+fileName,
+                		id: "FILENAME0",
+                		text: html,
+                	});
+                }
+            }
+        });

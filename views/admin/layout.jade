@@ -1,0 +1,47 @@
+doctype html
+html
+    head
+        meta(http-equiv='Content-Type', content='text/html;charset=utf-8')
+        meta(http-equiv='X-UA-Compatible', content='IE=Edge')
+        meta(http-equiv='X-UA-Compatible', content='IE=Edge')
+        meta(name='viewport', content='width=device-width, initial-scale=1, shrink-to-fit=no')
+
+        //- Bootstrap CSS
+        link(href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css', rel='stylesheet')
+        
+        link(rel='stylesheet', href='/stylesheets/style.css')
+        link(rel='stylesheet', href='/stylesheets/w2ui-1.5.rc1.css')
+
+        //- Bootstrap JS
+        script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js')
+        //- script(src='https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js')
+        
+        script(src='/javascripts/w2ui-1.5.rc1.js')
+        script(src='/javascripts/axios.min.js')
+        script(src='/javascripts/utils.js')
+
+    body(class='bg-light')  
+        div(class='d-flex flex-wrap bg-dark')        
+            if CURRENT_URL == '/admin'
+                - var active = 'bg-light text-dark';
+            else
+                - var active = 'bg-dark text-white';
+        
+            a(class='py-3 px-5 ' + active, href='/admin') 메뉴
+        
+        
+            - each menu in SAVE_MENUS
+                if CURRENT_URL == menu.LINK
+                    - var active = 'bg-light text-dark';
+                else
+                    - var active = 'bg-dark text-white';
+        
+                div(style='position: relative')
+                    div(onclick='location.href=\'' + menu.LINK + '\'', class='py-3 px-5 ' + active, style='cursor: pointer;')= menu.NAME1
+                    div(style='position: absolute; top: 0px; right: 4px;')
+                        button(class='button_x', type='button',onclick="location.href='/admin/delete_menu?IDX=" + menu.IDX + "'")
+                            span &times;
+
+
+        div(class='container-fluid py-5')
+            block content

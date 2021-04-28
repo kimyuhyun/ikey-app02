@@ -1,0 +1,38 @@
+extends layout
+
+block content
+    div(class='card shadow mb-4')
+        div(class='card-body', id='liveuser')
+            
+
+
+
+
+    script.
+        $(document).ready(function () {
+            liveuser();
+            
+            setInterval(function() {
+                liveuser();
+            }, 4000);
+        });
+        
+        function liveuser() {
+            axios.post('/analyzer/liveuser').then(function(res) {
+                console.log(res.data);
+                
+                var html = "========================================<br>";
+                html += res.data.currentTime + ", <font color='red'>" + res.data.list.length + "</font>명 접속<br>";
+                html += "(4분동안 액션이 없으면 카운팅에서 제외 됩니다.)<br>";
+                html += "========================================<br><br>";
+                                
+                for (i in res.data.list) {
+                    var obj = res.data.list[i];
+                    html += (parseInt(i) + 1) + ". 시간: " + obj.date + ", 세션: " + obj.id + "<br>위치: " + obj.url + "<br>";
+                    html += "<hr>";
+                }
+                
+                $("#liveuser").html(html);
+            });
+        }
+    

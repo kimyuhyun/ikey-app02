@@ -1,0 +1,31 @@
+extends layout
+
+block content
+    div(class='row')
+        div(class='col-12 col-sm-8 offset-sm-2')
+            div(class='card shadow mb-4')
+                div(class='card-body')            
+                    - each row1 in MENUS
+                        div(class='row mb-4')
+                            div(class='col-12 col-sm-2')
+                                h6(class='mb-0 text-secoundary')= row1.title
+                            
+                            - each row2 in row1.child
+                                //- 전체관리자는 체크하지 않는다..
+                                if LEVLE1 > 1
+                                    - each tmp in SHOW_MENU_LINK
+                                        if row2.link == tmp                                            
+                                            div(class='col-6 col-sm-2')
+                                                a(href=row2.link + '?NAME1=' + row2.title)= row2.title
+                                else
+                                    div(class='col-6 col-sm-2')
+                                        a(href=row2.link + '?NAME1=' + row2.title)= row2.title
+                                    
+                
+                    div(class='row')
+                        div(class='col-12 col-sm-2')
+                            h6(class='mb-0 text-secoundary') 설정
+                        div(class='col-6 col-sm-2')
+                            a(href='/admin/my_profile?NAME1=나의프로필') 나의프로필
+                        div(class='col-6 col-sm-2')
+                            a(href='/admin/logout') 로그아웃
