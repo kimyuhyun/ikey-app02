@@ -102,7 +102,7 @@ block content
                                     eval("var fileName = form.record.FILENAME"+i+".split('|')[1];");
 
                                     var html = '';
-                                    html += '<a href="!{ hostname }/'+fileLink+'" target="_blank">';
+                                    html += '<a href="'+fileLink+'" target="_blank">';
                                     html += fileName;
                                     html += '</a>';
 
@@ -131,7 +131,7 @@ block content
                     { field: 'FILENAME0', caption: '사진', size: '50px', sortable: true, resizable: true, attr: 'align=center',	//세팅 해줘야함
                         render: function(record) {
                             if (record.FILENAME0 != null && record.FILENAME0 != '') {
-                                return '<img src="!{ hostname }/' + record.FILENAME0.split("|")[0] + '" style="width: 30px; height: 30px;" />';
+                                return '<img src="' + record.FILENAME0.split("|")[0] + '" style="width: 30px; height: 30px;" />';
                             }
                         }
                     },
@@ -173,6 +173,9 @@ block content
                 ],
                 actions: {
                     reset: function () {
+                        w2ui.form.fields[0].disabled = false;
+                        w2ui.form.fields[1].required = true;
+                        
                         this.clear();
                         $("#save").text("입력");
                     },

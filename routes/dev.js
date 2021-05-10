@@ -11,6 +11,17 @@ global.SAVE_MENUS;
 global.CURRENT_URL;
 //
 
+/*
+    :ID
+    req.params
+
+    get:
+    req.query
+
+    post:
+    req.body
+*/
+
 function checkMiddleWare(req, res, next) {
     if (process.env.NODE_ENV != 'development') {
         if (req.session.ID == null) {
@@ -27,16 +38,23 @@ function checkMiddleWare(req, res, next) {
     });
 }
 
-router.get('/graph1', checkMiddleWare, function(req, res, next) {
-    var sql = ``;
-    db.query(sql, function(err, rows, fields) {
-        console.log(rows);
-        if (!err) {
+router.get('/', checkMiddleWare, async function(req, res, next) {
 
-        } else {
-            res.send(err);
-        }
-    });
+    // await new Promise(function(resolve, reject) {
+    //     var sql = ``;
+    //     db.query(sql, function(err, rows, fields) {
+    //         console.log(rows);
+    //         if (!err) {
+    //
+    //         } else {
+    //             console.log(err);
+    //         }
+    //     });
+    // }).then(function(data) {
+    //
+    // });
+
+    res.send('api');
 });
 
 

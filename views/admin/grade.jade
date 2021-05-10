@@ -173,21 +173,11 @@ block content
                                 w2ui.grid.set(res.data.record.IDX, res.data.record, false);
                                 w2ui.grid.selectNone();
                             }
+                            w2alert(res.data.msg);
                         });
                     }
                 },
-                onSave: function(e) {
-                    var result = JSON.parse(e.xhr.responseText);
-                    console.log(result);
-                    
-                    if (result.code == 1) {
-                        w2alert(result.msg);
-                        w2ui.grid.reload();
-                        this.clear();
-                        $("input[name='SHOW_MENU[]']").prop('checked', false);
-                        $("#save").text("입력");
-                    }
-                },
+                
             },
         };
         $(function () {

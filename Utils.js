@@ -62,7 +62,7 @@ class Utils {
         var self = this;
         return new Promise(function(resolve, reject) {
             // console.log(file);
-            var destWidth = 300;
+            var destWidth = 800;
             var tmp = file.originalname.split('.');
             var mimeType = tmp[tmp.length - 1];
             tmp = file.filename.split('.');

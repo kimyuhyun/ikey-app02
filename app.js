@@ -16,6 +16,7 @@ var crudRouter = require('./routes/crud');
 var analyzerRouter = require('./routes/analyzer');
 var apiRouter = require('./routes/api');
 
+
 var app = express();
 
 
@@ -54,6 +55,8 @@ app.use('/crud', crudRouter);
 app.use('/analyzer', analyzerRouter);
 app.use('/api', apiRouter);
 
+
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
     // res.status(404).send('페이지가 없습니다.');
@@ -76,5 +79,48 @@ app.use(function(err, req, res, next) {
     res.status(err.status || 500);
     res.render('error');
 });
+
+/*** Socket.IO 추가 ***/
+// 소켓 서버를 생성한다.
+app.io = require('socket.io')({
+    allowEIO3: true,
+});
+
+app.io.on('connection', function(socket) {
+    // console.log('Socket ID : ' + socket.id + ', Connect');
+    socket.on('clientRoom', function(data) {
+        console.log('Client Room', data);
+        socket.join(data);
+	});
+
+    socket.on('clientMessage', async function(data) {
+        console.log('Client Message', data);
+
+        //DB에 저장 해준다!!
+        await new Promise(function(resolve, reject) {
+            var sql = ""
+            var records = [];
+            for (key in data) {
+                if (data[key] != 'null') {
+                    sql += key + '= ?, ';
+                }
+                records.push(data[key]);
+            }
+            sql = "INSERT INTO TALK_tbl SET " + sql + " CDATE = NOW() ";
+            db.query(sql, records, function(err, rows, fields) {
+                // console.log(rows);
+                if (!err) {
+                    resolve(1);
+                } else {
+                    console.log(err);
+                }
+            });
+        }).then();
+
+        socket.to(data.ROOM_KEY).emit('serverMessage', data);
+	});
+
+});
+
 
 module.exports = app;

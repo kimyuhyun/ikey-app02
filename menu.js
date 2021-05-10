@@ -9,9 +9,13 @@ var menu = [{
                 "link": "/admin/page/manager"
             },
             {
+                "title": "의사 회원 관리",
+                "link": "/admin/page/doctor"
+            },
+            {
                 "title": "회원 관리",
                 "link": "/admin/page/user"
-            }
+            },
         ]
     },
     {

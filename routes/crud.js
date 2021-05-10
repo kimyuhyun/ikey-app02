@@ -113,7 +113,7 @@ router.post('/list', checkMiddleWare, async function(req, res, next) {
 router.get('/iterator', checkMiddleWare, async function(req, res, next) {
     var table = req.query.table;
     var sql = "SELECT * FROM " + table + " ORDER BY IDX DESC";
-    db.query(sql, table, function(err, rows, fields) {
+    db.query(sql, function(err, rows, fields) {
         res.send(rows);
     });
 });

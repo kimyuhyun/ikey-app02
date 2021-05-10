@@ -31,7 +31,10 @@ router.get('/', checkMiddleWare, function(req, res, next) {
     db.query("SELECT SHOW_MENU_LINK FROM GRADE_tbl WHERE LEVEL1 = '?'", req.session.LEVEL1, function(err, rows, fields) {
         console.log(rows);
         if (!err) {
-            var tmp = rows[0].SHOW_MENU_LINK.substr(1, 9999).split(',');
+            var tmp = "";
+            if (rows.length > 0) {
+                tmp = rows[0].SHOW_MENU_LINK.substr(1, 9999).split(',');
+            }
             res.render('./admin/main', {
                 SHOW_MENU_LINK: tmp,
                 LEVLE1: req.session.LEVEL1,
