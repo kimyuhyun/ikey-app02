@@ -20,16 +20,30 @@ block content
                         div
                             input(name='PASS1')
 
-                    div(class='w2ui-field w2ui-span2')                    
+                    div(class='w2ui-field w2ui-span2')
                         label 이름
                         div
                             input(name='NAME1')
+                            
+                    div(class='w2ui-field w2ui-span2')
+                        label 근무병원
+                        div
+                            input(name='HOSPITAL')
+                            
+                    div(class='w2ui-field w2ui-span2')
+                        label 소개글
+                        div
+                            textarea(name='SOGE', rows='3')
+                            
+                    div(class='w2ui-field w2ui-span2')
+                        label 의사번호
+                        div
+                            input(name='LICENSE_NUM')
 
                     div(class='w2ui-field w2ui-span2')                    
                         label 권한
                         div
                             select(name='LEVEL1')
-
 
                     div(class='w2ui-field w2ui-span2')
                         label 파일
@@ -100,7 +114,8 @@ block content
                                     eval("var fileName = form.record.FILENAME"+i+".split('|')[1];");
 
                                     var html = '';
-                                    html += '<a href="!{ hostname }/'+fileLink+'" target="_blank">';
+                                    //- html += '<a href="!{ hostname }/'+fileLink+'" target="_blank">';
+                                    html += '<a href="'+fileLink+'" target="_blank">';
                                     html += fileName;
                                     html += '</a>';
 
@@ -129,7 +144,7 @@ block content
                     { field: 'FILENAME0', caption: '사진', size: '50px', sortable: true, resizable: true, attr: 'align=center',	//세팅 해줘야함
                         render: function(record) {
                             if (record.FILENAME0 != null && record.FILENAME0 != '') {
-                                return '<img src="!{ hostname }/' + record.FILENAME0.split("|")[0] + '" style="width: 30px; height: 30px;" />';
+                                return '<img src="' + record.FILENAME0.split("|")[0] + '" style="width: 30px; height: 30px;" />';
                             }
                         }
                     },
@@ -153,6 +168,9 @@ block content
                     { field: 'ID', type: 'text', required: true },	//세팅 해줘야함
                     { field: 'PASS1', type: 'password', required: true },	//세팅 해줘야함
                     { field: 'NAME1', type: 'text', required: true },	//세팅 해줘야함
+                    { field: 'HOSPITAL', type: 'text', },	//세팅 해줘야함
+                    { field: 'SOGE', type: 'text', },	//세팅 해줘야함
+                    { field: 'LICENSE_NUM', type: 'text', },	//세팅 해줘야함
                     { field: 'LEVEL1', type: 'select', required: true },	//세팅 해줘야함
                     { field: 'UPLOADED_FILES', type: 'enum', 
                         options: {

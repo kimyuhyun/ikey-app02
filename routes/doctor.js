@@ -73,25 +73,53 @@ async function checkMiddleWare(req, res, next) {
     next();
 }
 
-router.get('/', checkMiddleWare, async function(req, res, next) {
+router.get('/list', checkMiddleWare, async function(req, res, next) {
+    var query = '%' + req.query.query + '%';
+    var tag = '%' + req.query.tag + '%';
 
-    // await new Promise(function(resolve, reject) {
-    //     var sql = ``;
-    //     db.query(sql, function(err, rows, fields) {
-    //         console.log(rows);
-    //         if (!err) {
-    //
-    //         } else {
-    //             console.log(err);
-    //         }
-    //     });
-    // }).then(function(data) {
-    //
-    // });
+    await new Promise(function(resolve, reject) {
+        var arr = [];
 
-    res.send('api');
+        var sql = `SELECT ID, NAME1, FILENAME0, SOGE, HOSPITAL, TAGS FROM MEMB_tbl WHERE LEVEL1 = 5 `;
+        if (query != '%%') {
+            sql+= ` AND NAME1 LIKE ? `;
+            arr.push(query);
+        }
+        if (tag != '%%') {
+            sql+= ` AND TAGS LIKE ? `;
+            arr.push(tag);
+        }
+        sql += ` ORDER BY NAME1 ASC `;
+console.log(sql);
+        db.query(sql, arr, function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                resolve(rows);
+            } else {
+                res.send(err);
+            }
+        });
+    }).then(function(data) {
+        res.send(data);
+    });
 });
 
+router.get('/list/:ID', checkMiddleWare, async function(req, res, next) {
+    var id = req.params.ID;
 
+    await new Promise(function(resolve, reject) {
+        var sql = `SELECT * FROM MEMB_tbl WHERE ID = ?`;
+        db.query(sql, id, function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                resolve(rows[0]);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        res.send(data);
+    });
+});
 
 module.exports = router;

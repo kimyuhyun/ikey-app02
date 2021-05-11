@@ -15,6 +15,8 @@ var adminRouter = require('./routes/admin');
 var crudRouter = require('./routes/crud');
 var analyzerRouter = require('./routes/analyzer');
 var apiRouter = require('./routes/api');
+var pharmacyRouter = require('./routes/pharmacy');
+var doctorRouter = require('./routes/doctor');
 
 
 var app = express();
@@ -54,6 +56,8 @@ app.use('/admin', adminRouter);
 app.use('/crud', crudRouter);
 app.use('/analyzer', analyzerRouter);
 app.use('/api', apiRouter);
+app.use('/pharmacy', pharmacyRouter);
+app.use('/doctor', doctorRouter);
 
 
 
@@ -96,6 +100,30 @@ app.io.on('connection', function(socket) {
     socket.on('clientMessage', async function(data) {
         console.log('Client Message', data);
 
+        //lastMsg 업데이트
+        var lastMsg = "";
+        if (data.MSG_TYPE == 1) {
+            lastMsg = '이미지';
+        } else if (data.MSG_TYPE == 2) {
+            lastMsg = '진료비 청구';
+        } else {
+            lastMsg = data.MSG;
+        }
+
+        await new Promise(function(resolve, reject) {
+            var sql = `UPDATE ROOM_tbl SET
+                        LAST_MSG = ?,
+                        WDATE = ?
+                        WHERE ROOM_KEY = ?`;
+            db.query(sql, [lastMsg, data.WDATE, data.ROOM_KEY], function(err, rows, fields) {
+                if (!err) {
+                    resolve(1);
+                } else {
+                    console.log(err);
+                }
+            });
+        }).then();
+
         //DB에 저장 해준다!!
         await new Promise(function(resolve, reject) {
             var sql = ""
@@ -116,6 +144,8 @@ app.io.on('connection', function(socket) {
                 }
             });
         }).then();
+
+
 
         socket.to(data.ROOM_KEY).emit('serverMessage', data);
 	});

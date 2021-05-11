@@ -129,31 +129,7 @@ router.post('/login', checkMiddleWare, async function(req, res, next) {
 });
 
 
-router.get('/search_friends/:LEVEL1', checkMiddleWare, async function(req, res, next) {
-    var query = '%' + req.query.query + '%';
-    var level1 = req.params.LEVEL1;
 
-    //의사는 환자만 검색되게, 환자는 의사만 검색되게
-    if (level1 == 5) {
-        level1 = 9;
-    } else if (level1 == 9) {
-        level1 = 5;
-    }
-
-    await new Promise(function(resolve, reject) {
-        var sql = `SELECT ID, NAME1, FILENAME0, SOGE, HOSPITAL FROM MEMB_tbl WHERE NAME1 LIKE ? AND LEVEL1 = ? ORDER BY NAME1 ASC`;
-        db.query(sql, [query, level1], function(err, rows, fields) {
-            console.log(rows);
-            if (!err) {
-                resolve(rows);
-            } else {
-                res.send(err);
-            }
-        });
-    }).then(function(data) {
-        res.send(data);
-    });
-});
 
 router.get('/get_friends/:ID', checkMiddleWare, async function(req, res, next) {
     var id = req.params.ID;
@@ -198,6 +174,143 @@ router.get('/get_talk_details', checkMiddleWare, async function(req, res, next) 
     });
 });
 
+
+router.post('/create_room', checkMiddleWare, async function(req, res, next) {
+    var roomKey = req.body.ROOM_KEY;
+    var doctorID = req.body.DOCTOR_ID;
+    var lastMsg = req.body.LAST_MSG;
+    var myId = req.body.MY_ID;
+    var myName = req.body.MY_NAME;
+    var myThumb = req.body.MY_THUMB;
+
+    var sql = "";
+
+    //방이 있는지 확인
+    var cnt = 0;
+    await new Promise(function(resolve, reject) {
+        sql = "SELECT COUNT(*) as CNT FROM ROOM_tbl WHERE ROOM_KEY = ?";
+        db.query(sql, roomKey, function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                resolve(rows[0].CNT);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        cnt = data;
+    });
+    //
+
+    if (cnt == 0) {
+        //채팅방 만들고...
+        sql = `INSERT INTO ROOM_tbl SET
+                ROOM_KEY = ?,
+                MY_ID = ?,
+                DOCTOR_ID = ?,
+                LAST_MSG = ?,
+                STATE = ?,
+                WDATE = ?,
+                CDATE = NOW()`;
+        db.query(sql, [roomKey, myId, doctorID, lastMsg, 0, new Date().getTime()]);
+    }
+
+    //채팅 넣어주기...
+    await new Promise(function(resolve, reject) {
+        sql = `INSERT INTO TALK_tbl SET
+                ROOM_KEY = ?,
+                WRITER = ?,
+                WRITER_NAME = ?,
+                THUMB = ?,
+                MSG_TYPE = 0,
+                MSG = ?,
+                WDATE = ?,
+                CDATE = NOW()`;
+        db.query(sql, [roomKey, myId, myName, myThumb, lastMsg, new Date().getTime()], function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                resolve(rows);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        res.send(data);
+    });
+    //
+});
+
+router.get('/room_list/:ID/:LEVEL1', checkMiddleWare, async function(req, res, next) {
+    var id = req.params.ID;
+    var level1 = req.params.LEVEL1;
+    var sql = "";
+    await new Promise(function(resolve, reject) {
+        if (level1 == 9) {
+            sql = `SELECT
+                    A.*,
+                    (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as ROOM_NAME,
+                    (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as THUMB
+                    FROM ROOM_tbl as A
+                    WHERE A.MY_ID = ?`;
+        } else {
+            sql = `SELECT
+                    A.*,
+                    (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.MY_ID) as ROOM_NAME,
+                    (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.MY_ID) as THUMB
+                    FROM ROOM_tbl as A
+                    WHERE A.DOCTOR_ID = ?`;
+        }
+
+        db.query(sql, id, function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                resolve(rows);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        res.send(data);
+    });
+});
+
+
+router.get('/get_room_info/:ROOM_KEY', checkMiddleWare, async function(req, res, next) {
+    var roomKey = req.params.ROOM_KEY;
+
+    await new Promise(function(resolve, reject) {
+        var sql = "SELECT * FROM ROOM_tbl WHERE ROOM_KEY = ?";
+        db.query(sql, roomKey, function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                resolve(rows[0]);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        res.send(data);
+    });
+});
+
+router.post('/set_room_state/:ROOM_KEY', checkMiddleWare, async function(req, res, next) {
+    var state = req.body.STATE;
+    var roomKey = req.params.ROOM_KEY;
+
+    await new Promise(function(resolve, reject) {
+        var sql = "UPDATE ROOM_tbl SET STATE = ? WHERE ROOM_KEY = ?";
+        db.query(sql, [state, roomKey], function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                resolve(rows)
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        res.send(data);
+    });
+});
 
 router.get('/', checkMiddleWare, async function(req, res, next) {
 
