@@ -214,7 +214,7 @@ router.post('/create_room', checkMiddleWare, async function(req, res, next) {
                 ANSWER0 = ?,
                 ANSWER1 = ?,
                 ANSWER2 = ?,
-                MEMO = '진료신청 되었습니다.'
+                MEMO = '진료신청 되었습니다.',
                 WDATE = NOW(),
                 LDATE = NOW() `;
         db.query(sql, [myId, doctorId, answer0, answer1, answer2], function(err, rows, fields) {
