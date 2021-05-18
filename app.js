@@ -10,6 +10,7 @@ var requestIp = require('request-ip');
 var logger = require('morgan');
 var db = require('./db');
 
+
 var indexRouter = require('./routes/index');
 var adminRouter = require('./routes/admin');
 var crudRouter = require('./routes/crud');
@@ -30,7 +31,8 @@ app.use(session({
     saveUninitialized: true,
     store: new MySQLStore(db.connAccount),
     cookie: {
-        maxAge: 24000 * 60 * 60 // 쿠키 유효기간 24시간
+        // maxAge: 24000 * 60 * 60 // 쿠키 유효기간 24시간
+        maxAge: 1000 * 60 * 60 // 쿠키 유효기간 1시간
     }
 }));
 
@@ -71,13 +73,11 @@ app.use(function(req, res, next) {
 // error handler
 app.use(function(err, req, res, next) {
     console.log('ENV', process.env.NODE_ENV);
-    console.log('ENV', req.app.get('env'));
 
     // set locals, only providing error in development
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
-    app.locals.hostname = 'http://' + process.env.HOST_NAME;
-
+    app.locals.hostname = process.env.HOST_NAME;
 
     // render the error page
     res.status(err.status || 500);

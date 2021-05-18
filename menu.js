@@ -1,20 +1,24 @@
 var menu = [{
         "title": "회원관리",
         "child": [{
-                "title": "권한 관리",
+                "title": "권한관리",
                 "link": "/admin/page/grade"
             },
             {
-                "title": "관리자 관리",
+                "title": "관리자",
                 "link": "/admin/page/manager"
             },
             {
-                "title": "의사 회원 관리",
+                "title": "의사회원",
                 "link": "/admin/page/doctor"
             },
             {
-                "title": "회원 관리",
+                "title": "회원",
                 "link": "/admin/page/user"
+            },
+            {
+                "title": "의사 심사대기",
+                "link": "/admin/page/doctor_wait"
             },
         ]
     },
@@ -26,8 +30,20 @@ var menu = [{
                 "link": "/admin/page/notice"
             },
             {
-                "title": "고객센터",
-                "link": "/admin/page/cscenter"
+                "title": "이벤트",
+                "link": "/admin/page/event"
+            },
+            {
+                "title": "1:1문의",
+                "link": "/admin/page/counsel"
+            },
+            {
+                "title": "자주묻는질문",
+                "link": "/admin/page/faq"
+            },
+            {
+                "title": "신고게시판",
+                "link": "/admin/page/singo"
             },
         ]
     },

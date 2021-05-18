@@ -128,26 +128,14 @@ router.post('/login', checkMiddleWare, async function(req, res, next) {
     });
 });
 
-
-
-
-router.get('/get_friends/:ID', checkMiddleWare, async function(req, res, next) {
+router.get('/myinfo/:ID', checkMiddleWare, async function(req, res, next) {
     var id = req.params.ID;
+
     await new Promise(function(resolve, reject) {
-        var sql = `SELECT
-                    B.ID,
-                    B.NAME1,
-                    B.FILENAME0,
-                    B.HP,
-                    B.HOSPITAL,
-                    B.SOGE
-                    FROM FRIENDS_tbl as A, MEMB_tbl as B
-                    WHERE A.YOUR_ID = B.ID
-                    AND A.MY_ID = ?`;
+        var sql = `SELECT NAME1, FILENAME0, HP, LEVEL1 FROM MEMB_tbl WHERE ID = ?`;
         db.query(sql, id, function(err, rows, fields) {
-            console.log(rows);
             if (!err) {
-                resolve(rows);
+                resolve(rows[0]);
             } else {
                 console.log(err);
             }
@@ -156,6 +144,7 @@ router.get('/get_friends/:ID', checkMiddleWare, async function(req, res, next) {
         res.send(data);
     });
 });
+
 
 router.get('/get_talk_details', checkMiddleWare, async function(req, res, next) {
     var roomKey = req.query.ROOM_KEY;
@@ -177,11 +166,13 @@ router.get('/get_talk_details', checkMiddleWare, async function(req, res, next) 
 
 router.post('/create_room', checkMiddleWare, async function(req, res, next) {
     var roomKey = req.body.ROOM_KEY;
-    var doctorID = req.body.DOCTOR_ID;
-    var lastMsg = req.body.LAST_MSG;
-    var myId = req.body.MY_ID;
+    var doctorId = req.body.DOCTOR_ID;
+    var myId = req.body.USER_ID;
     var myName = req.body.MY_NAME;
     var myThumb = req.body.MY_THUMB;
+    var answer0 = req.body.ANSWER0;
+    var answer1 = req.body.ANSWER1;
+    var answer2 = req.body.ANSWER2;
 
     var sql = "";
 
@@ -206,27 +197,27 @@ router.post('/create_room', checkMiddleWare, async function(req, res, next) {
         //채팅방 만들고...
         sql = `INSERT INTO ROOM_tbl SET
                 ROOM_KEY = ?,
-                MY_ID = ?,
+                USER_ID = ?,
                 DOCTOR_ID = ?,
-                LAST_MSG = ?,
+                LAST_MSG = '',
                 STATE = ?,
                 WDATE = ?,
                 CDATE = NOW()`;
-        db.query(sql, [roomKey, myId, doctorID, lastMsg, 0, new Date().getTime()]);
+        db.query(sql, [roomKey, myId, doctorId, 0, new Date().getTime()]);
     }
 
-    //채팅 넣어주기...
+    //진료테이블에 넣어주기...
     await new Promise(function(resolve, reject) {
-        sql = `INSERT INTO TALK_tbl SET
-                ROOM_KEY = ?,
-                WRITER = ?,
-                WRITER_NAME = ?,
-                THUMB = ?,
-                MSG_TYPE = 0,
-                MSG = ?,
-                WDATE = ?,
-                CDATE = NOW()`;
-        db.query(sql, [roomKey, myId, myName, myThumb, lastMsg, new Date().getTime()], function(err, rows, fields) {
+        sql = `INSERT INTO JINLYO_tbl SET
+                USER_ID = ?,
+                DOCTOR_ID = ?,
+                ANSWER0 = ?,
+                ANSWER1 = ?,
+                ANSWER2 = ?,
+                MEMO = '진료신청 되었습니다.'
+                WDATE = NOW(),
+                LDATE = NOW() `;
+        db.query(sql, [myId, doctorId, answer0, answer1, answer2], function(err, rows, fields) {
             console.log(rows);
             if (!err) {
                 resolve(rows);
@@ -238,6 +229,8 @@ router.post('/create_room', checkMiddleWare, async function(req, res, next) {
         res.send(data);
     });
     //
+
+
 });
 
 router.get('/room_list/:ID/:LEVEL1', checkMiddleWare, async function(req, res, next) {
@@ -251,12 +244,12 @@ router.get('/room_list/:ID/:LEVEL1', checkMiddleWare, async function(req, res, n
                     (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as ROOM_NAME,
                     (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as THUMB
                     FROM ROOM_tbl as A
-                    WHERE A.MY_ID = ?`;
+                    WHERE A.USER_ID = ?`;
         } else {
             sql = `SELECT
                     A.*,
-                    (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.MY_ID) as ROOM_NAME,
-                    (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.MY_ID) as THUMB
+                    (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.USER_ID) as ROOM_NAME,
+                    (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.USER_ID) as THUMB
                     FROM ROOM_tbl as A
                     WHERE A.DOCTOR_ID = ?`;
         }
@@ -312,6 +305,80 @@ router.post('/set_room_state/:ROOM_KEY', checkMiddleWare, async function(req, re
     });
 });
 
+
+router.get('/jinlyo_list', checkMiddleWare, async function(req, res, next) {
+    var userId = req.query.USER_ID;
+    var doctorId = req.query.DOCTOR_ID;
+
+    await new Promise(function(resolve, reject) {
+        var sql = "";
+
+        if (doctorId == '') {
+            sql = `
+                SELECT
+                A.*,
+                (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as NAME1,
+                (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as THUMB
+                FROM
+                JINLYO_tbl as A
+                WHERE USER_ID = ? ORDER BY WDATE DESC
+            `;
+        } else {
+            sql = `
+                SELECT
+                A.*,
+                (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.USER_ID) as NAME1,
+                (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.USER_ID) as THUMB
+                FROM
+                JINLYO_tbl as A
+                WHERE USER_ID = ? AND DOCTOR_ID = ? ORDER BY WDATE DESC
+            `;
+        }
+
+        db.query(sql, [userId, doctorId], function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                resolve(rows);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        res.send(data);
+    });
+});
+
+router.get('/jinlyo_detail/:IDX', checkMiddleWare, async function(req, res, next) {
+    var idx = req.params.IDX;
+
+    await new Promise(function(resolve, reject) {
+        // var sql = `
+        //     SELECT
+        //     A.*,
+        //     (SELECT ID FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_ID,
+        //     (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_NAME,
+        //     (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_THUMB,
+        //     (SELECT SOGE FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_SOGE,
+        //     (SELECT HOSPITAL FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_HOSPITAL,
+        //     (SELECT CATEGORYS FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_CATEGORYS
+        //     FROM JINLYO_tbl as A WHERE A.IDX = ?
+        // `;
+
+        var sql = ` SELECT * FROM JINLYO_tbl as A WHERE A.IDX = ? `;
+
+        db.query(sql, idx, function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                resolve(rows[0]);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        res.send(data);
+    });
+});
+
 router.get('/', checkMiddleWare, async function(req, res, next) {
 
     // await new Promise(function(resolve, reject) {
@@ -335,6 +402,7 @@ router.get('/', checkMiddleWare, async function(req, res, next) {
 
 router.post('/file_upload', upload.single('upload_file'), async function(req, res, next) {
     await utils.setResize(req.file).then(function(newFileName) {
+        newFileName = process.env.HOST_NAME + '/' + newFileName;
         console.log('newFileName', newFileName);
         res.send(newFileName);
     });

@@ -131,6 +131,7 @@ router.post('/write', checkMiddleWare, upload.array('FILES'), async function(req
         var fileIndex = Number(i) + Number(uploadedLength);
         // console.log("req.body.FILENAME" + fileIndex, i, uploadedLength);
         await utils.setResize(req.files[i]).then(function(newFileName) {
+            newFileName = process.env.HOST_NAME + '/' + newFileName;
             console.log('newFileName', newFileName);
             eval("req.body.FILENAME" + fileIndex + " = newFileName + '|' + req.files[" + i + "].originalname");
         });

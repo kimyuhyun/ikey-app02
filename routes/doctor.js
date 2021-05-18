@@ -75,22 +75,23 @@ async function checkMiddleWare(req, res, next) {
 
 router.get('/list', checkMiddleWare, async function(req, res, next) {
     var query = '%' + req.query.query + '%';
-    var tag = '%' + req.query.tag + '%';
+    var category = '%' + req.query.category + '%';
 
     await new Promise(function(resolve, reject) {
         var arr = [];
 
-        var sql = `SELECT ID, NAME1, FILENAME0, SOGE, HOSPITAL, TAGS FROM MEMB_tbl WHERE LEVEL1 = 5 `;
+        var sql = `SELECT ID, NAME1, FILENAME0, SOGE, HOSPITAL, CATEGORYS FROM MEMB_tbl WHERE LEVEL1 = 5 `;
         if (query != '%%') {
-            sql+= ` AND NAME1 LIKE ? `;
+            sql+= ` (AND NAME1 LIKE ? OR TAGS LIKE ?) `;
+            arr.push(query);
             arr.push(query);
         }
-        if (tag != '%%') {
-            sql+= ` AND TAGS LIKE ? `;
-            arr.push(tag);
+        if (category != '%%') {
+            sql+= ` AND CATEGORYS LIKE ? `;
+            arr.push(category);
         }
         sql += ` ORDER BY NAME1 ASC `;
-console.log(sql);
+        console.log(sql);
         db.query(sql, arr, function(err, rows, fields) {
             console.log(rows);
             if (!err) {
