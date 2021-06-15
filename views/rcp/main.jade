@@ -1,0 +1,61 @@
+extends layout
+
+
+
+block content
+    div(class='form-floating mb-3')
+        select(class='form-control', name='USER_ID', onChange='selectedUser(this.value)')
+            option(value='') ::환자를 선택해 주세요::
+            - each row in userList
+                if row.USER_ID == userId
+                    option(value='#{row.USER_ID}', selected) #{row.USER_NAME} 
+                else 
+                    option(value='#{row.USER_ID}') #{row.USER_NAME} 
+        label(class='form-label') 환자선택
+            
+    table(class='table table-sm table-striped table-hover')
+        tr
+            th(class='text-center') No.
+            th(class='text-center') 이름
+            th(class='text-center') 진료비
+            th(class='text-center') 결제Y/N
+            th(class='text-center') 처방전
+            th(class='text-center') 영수증
+            th(class='text-center') 등록일
+            
+        - each row, i in jinlyobiList
+            - var date = new Date(row.WDATE);
+            - var month = eval(date.getMonth()+1);
+            - var day = date.getDate();
+            - if (eval(date.getMonth()+1) < 10) {
+            -     month = "0" + eval(date.getMonth()+1);
+            - }
+            - if (date.getDate() < 10) {
+            -     day = "0" + date.getDate();
+            - }
+            - var postTime = date.getFullYear() + "-" + month + "-" + day;
+            tr(style='cursor: pointer;', onclick='detailView(#{row.IDX})')
+                td(class='text-center') #{i+1}
+                td(class='text-center') #{row.USER_NAME}
+                td(class='text-end') #{row.PRICE.toLocaleString() + ' 원'}
+                td(class='text-center') #{row.IS_PAYMENT==0?'X':'O'}
+                td(class='text-center') #{row.RECIPE==''?'X':'O'}
+                td(class='text-center') #{row.RECEIPT==''?'X':'O'}
+                td(class='text-center') #{postTime}
+                
+    
+    
+    
+    if userId != null
+        div(class='text-end mt-4')
+            a(class='btn btn-primary', href='/rcp/#{info.token}/add/#{userId}') 
+                i(class="fas fa-plus")  진료비생성
+
+
+    script.
+        function selectedUser(userId) {
+            location.href='/rcp/#{info.token}?USER_ID=' + userId;
+        }
+        function detailView(idx) {
+            location.href='/rcp/#{info.token}/' + idx + '?USER_ID=#{userId}';
+        }

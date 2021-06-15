@@ -4,7 +4,7 @@ var router = express.Router();
 
 router.get('/', function(req, res, next) {
     res.render('index', {
-        title: 'Express',
+        title: process.env.APP_NAME,
         mode: process.env.NODE_ENV,
     });
 });

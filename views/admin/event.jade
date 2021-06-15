@@ -37,7 +37,6 @@ block content
 
     //- 들여쓰기 중요함
     script.
-        //- var menuArr = JSON.parse('!{JSON.stringify(SAVE_MENUS)}');
         var fileLimitCount = 10;
         var table = 'BOARD_tbl';
         var config = {
@@ -200,12 +199,13 @@ block content
                             w2ui.form.clear();
 
                             if (res.data.code == 1) {                                
-                                setTimeout(function() {
+                                setTimeout(function(){
                                     w2ui.grid.reload();
                                 }, 500);
                             } else if (res.data.code == 2) {
-                                setTimeout(function() {
+                                setTimeout(function(){
                                     w2ui.grid.set(res.data.record.IDX, res.data.record, false);
+                                    w2ui.grid.selectNone();    
                                 }, 500);
                             }
                             

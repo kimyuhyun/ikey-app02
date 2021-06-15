@@ -9,7 +9,7 @@ var cookieParser = require('cookie-parser');
 var requestIp = require('request-ip');
 var logger = require('morgan');
 var db = require('./db');
-
+var request = require('request');
 
 var indexRouter = require('./routes/index');
 var adminRouter = require('./routes/admin');
@@ -18,6 +18,13 @@ var analyzerRouter = require('./routes/analyzer');
 var apiRouter = require('./routes/api');
 var pharmacyRouter = require('./routes/pharmacy');
 var doctorRouter = require('./routes/doctor');
+var memberRouter = require('./routes/member');
+var jinlyoRouter = require('./routes/jinlyo');
+var rcpRouter = require('./routes/rcp');
+var pushRouter = require('./routes/push');
+var tmpRouter = require('./routes/tmp');
+var articleRouter = require('./routes/article');
+var termsRouter = require('./routes/terms');
 
 
 var app = express();
@@ -60,7 +67,13 @@ app.use('/analyzer', analyzerRouter);
 app.use('/api', apiRouter);
 app.use('/pharmacy', pharmacyRouter);
 app.use('/doctor', doctorRouter);
-
+app.use('/member', memberRouter);
+app.use('/jinlyo', jinlyoRouter);
+app.use('/rcp', rcpRouter);
+app.use('/push', pushRouter);
+app.use('/tmp', tmpRouter);
+app.use('/article', articleRouter);
+app.use('/terms', termsRouter);
 
 
 // catch 404 and forward to error handler
@@ -78,11 +91,19 @@ app.use(function(err, req, res, next) {
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
     app.locals.hostname = process.env.HOST_NAME;
+    app.locals.APP_NAME = '진료상담';
 
     // render the error page
     res.status(err.status || 500);
     res.render('error');
 });
+
+//catch unCaughtException
+process.on("uncaughtException", function(err) {
+    console.error("uncaughtException (Node is alive)", err);
+});
+
+
 
 /*** Socket.IO 추가 ***/
 // 소켓 서버를 생성한다.
@@ -100,12 +121,25 @@ app.io.on('connection', function(socket) {
     socket.on('clientMessage', async function(data) {
         console.log('Client Message', data);
 
+        //푸시보낼 데이터 정리
+        var roomKey = data.ROOM_KEY;
+        var roomName = data.ROOM_NAME;
+        delete data.ROOM_NAME;
+
+        var doctorId = data.DOCTOR_ID;
+        delete data.DOCTOR_ID;
+
+        var userId = data.USER_ID;
+        delete data.USER_ID;
+
+        var receiver = data.RECEIVER;
+        delete data.RECEIVER;
+        //
+
         //lastMsg 업데이트
         var lastMsg = "";
         if (data.MSG_TYPE == 1) {
             lastMsg = '이미지';
-        } else if (data.MSG_TYPE == 2) {
-            lastMsg = '진료비 청구';
         } else {
             lastMsg = data.MSG;
         }
@@ -144,10 +178,67 @@ app.io.on('connection', function(socket) {
                 }
             });
         }).then();
+        //
 
+        //no read 테이블에 넣어주기
+        await new Promise(function(resolve, reject) {
+            var sql = "INSERT INTO TALK_NO_READ_tbl SET ROOM_KEY = ?, ID = ? ";
+            db.query(sql, [roomKey, receiver], function(err, rows, fields) {
+                if (!err) {
+                    resolve(1);
+                } else {
+                    console.log(err);
+                }
+            });
+        }).then();
+        //
 
 
         socket.to(data.ROOM_KEY).emit('serverMessage', data);
+
+        //푸시도 날려준다!!!
+        var fcmArr = [];
+        await new Promise(function(resolve, reject) {
+            var sql = "SELECT FCM FROM MEMB_tbl WHERE ID = ?"
+            db.query(sql, receiver, function(err, rows, fields) {
+                console.log(rows[0].FCM);
+                if (!err) {
+                    resolve(rows[0].FCM);
+                } else {
+                    console.log(err);
+                }
+            });
+        }).then(function(data) {
+            fcmArr.push(data);
+        });
+
+        var fields = {};
+        fields['notification'] = {};
+        fields['data'] = {};
+
+        fields['registration_ids'] = fcmArr;
+        fields['notification']['title'] = process.env.APP_NAME;
+        fields['notification']['body'] = data.MSG;
+        fields['notification']['click_action'] = 'chating_message'; //액티비티 다이렉트 호출
+        fields['priority'] = 'high';
+        fields['data']['menu_flag'] = 'talk';               //키값은 대문자 안먹음..
+        fields['data']['room_key'] = roomKey;               //키값은 대문자 안먹음..
+
+
+        var options = {
+            'method': 'POST',
+            'url': 'https://fcm.googleapis.com/fcm/send',
+            'headers': {
+                'Content-Type': 'application/json',
+                'Authorization': 'key=AAAA_B0I4P0:APA91bFUZCJ9bOeARbhKonYiKXi4_1j1QbUkG4I03-dCGw83Qytmw5dz5pH6umm3w37CvYlwA-5KEQD9nFs0rzixTeoimBm1JGJFOa-JHXkA248fcdouvStdmCIYje-xYm5oe25--S20'
+            },
+            body: JSON.stringify(fields)
+        };
+        request(options, function (error, response) {
+            console.log(response.body);
+        });
+        //
+
 	});
 
 });

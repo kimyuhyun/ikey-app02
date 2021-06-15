@@ -7,7 +7,7 @@ var multer = require('multer');
 var uniqid = require('uniqid');
 var utils = require('../Utils');
 var requestIp = require('request-ip');
-var moment = require('moment');
+const moment = require('moment');
 
 
 var upload = multer({
@@ -76,13 +76,24 @@ async function checkMiddleWare(req, res, next) {
 router.get('/list', checkMiddleWare, async function(req, res, next) {
     var query = '%' + req.query.query + '%';
     var category = '%' + req.query.category + '%';
+    var arr = [];
 
     await new Promise(function(resolve, reject) {
         var arr = [];
 
-        var sql = `SELECT ID, NAME1, FILENAME0, SOGE, HOSPITAL, CATEGORYS FROM MEMB_tbl WHERE LEVEL1 = 5 `;
+        var sql = `
+                SELECT
+                ID,
+                NAME1,
+                FILENAME0,
+                SOGE,
+                HOSPITAL,
+                CATEGORYS,
+                (SELECT COUNT(*) FROM DOCTOR_FAVORITE_tbl WHERE DOCTOR_ID = A.ID) as FAV_CNT
+                FROM MEMB_tbl as A
+                WHERE LEVEL1 = 5 `;
         if (query != '%%') {
-            sql+= ` (AND NAME1 LIKE ? OR TAGS LIKE ?) `;
+            sql+= ` AND (NAME1 LIKE ? OR TAGS LIKE ?) `;
             arr.push(query);
             arr.push(query);
         }
@@ -101,16 +112,37 @@ router.get('/list', checkMiddleWare, async function(req, res, next) {
             }
         });
     }).then(function(data) {
-        res.send(data);
+        arr = data;
     });
+
+    //진료중인이 가져오기!!
+    for (row of arr) {
+        var gbn = '';
+        await new Promise(function(resolve, reject) {
+            resolve(getJinlyoGbn(row.ID));
+        }).then(function(data) {
+            gbn = data;
+        });
+        row.JINLYO_GBN = gbn;
+    }
+    //
+    res.send(arr);
+
 });
 
 router.get('/list/:ID', checkMiddleWare, async function(req, res, next) {
-    var id = req.params.ID;
+    const doctorId = req.params.ID;
+    const userId = req.query.USER_ID;
+
+    var arr = {};
 
     await new Promise(function(resolve, reject) {
-        var sql = `SELECT * FROM MEMB_tbl WHERE ID = ?`;
-        db.query(sql, id, function(err, rows, fields) {
+        var sql = `
+            SELECT
+            A.*,
+            (SELECT COUNT(*) FROM DOCTOR_FAVORITE_tbl WHERE DOCTOR_ID = A.ID) as FAV_CNT
+            FROM MEMB_tbl as A WHERE ID = ?`;
+        db.query(sql, doctorId, function(err, rows, fields) {
             console.log(rows);
             if (!err) {
                 resolve(rows[0]);
@@ -119,8 +151,209 @@ router.get('/list/:ID', checkMiddleWare, async function(req, res, next) {
             }
         });
     }).then(function(data) {
-        res.send(data);
+        arr = data;
     });
+
+    delete arr.PASS1;
+    delete arr.EMAIL_OK;
+    delete arr.EMAIL;
+    delete arr.TEL;
+    delete arr.LICENSE_NUM;
+    delete arr.HP;
+    delete arr.SMS_OK;
+    delete arr.POLICY_OK;
+    delete arr.REG_TYPE;
+    delete arr.SEX;
+    delete arr.WDATE;
+    delete arr.LDATE;
+    delete arr.FCM;
+
+    await new Promise(function(resolve, reject) {
+        var sql = `SELECT COUNT(*) as CNT FROM DOCTOR_FAVORITE_tbl WHERE USER_ID = ? AND DOCTOR_ID = ?`;
+        db.query(sql, [userId, doctorId], function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                resolve(rows[0].CNT);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        if (data > 0) {
+            arr.IS_FAV = true;
+        } else {
+            arr.IS_FAV = false;
+        }
+    });
+
+    var gbn = '';
+    await new Promise(function(resolve, reject) {
+        resolve(getJinlyoGbn(doctorId));
+    }).then(function(data) {
+        gbn = data;
+    });
+    arr.JINLYO_GBN = gbn;
+
+    //병원 위도,경도 가져오기
+    if (arr.HOSPITAL_IDX) {
+        await new Promise(function(resolve, reject) {
+            var sql = `SELECT LAT, LNG FROM HOSPITAL_tbl WHERE IDX = ?`;
+            db.query(sql, arr.HOSPITAL_IDX, function(err, rows, fields) {
+                console.log(rows);
+                if (!err) {
+                    resolve(rows[0]);
+                } else {
+                    console.log(err);
+                }
+            });
+        }).then(function(data) {
+            if (data) {
+                arr.LAT = data.LAT;
+                arr.LNG = data.LNG;
+            }
+        });
+    }
+    //
+
+
+    res.send(arr);
+});
+
+
+router.get('/set_doctor_fav', checkMiddleWare, async function(req, res, next) {
+    const userId = req.query.user_id;
+    const doctorId = req.query.doctor_id;
+
+    var isFav = false;
+
+    await new Promise(function(resolve, reject) {
+        var sql = `SELECT COUNT(*) as CNT FROM DOCTOR_FAVORITE_tbl WHERE USER_ID = ? AND DOCTOR_ID = ?`;
+        db.query(sql, [userId, doctorId], function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                resolve(rows[0].CNT);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        if (data > 0) {
+            isFav = true;
+        } else {
+            isFav = false;
+        }
+    });
+
+    var sql = '';
+    if (isFav) {
+        sql = 'DELETE FROM DOCTOR_FAVORITE_tbl WHERE USER_ID = ? AND DOCTOR_ID = ?';
+    } else {
+        sql = 'INSERT INTO DOCTOR_FAVORITE_tbl SET USER_ID = ?, DOCTOR_ID = ?';
+    }
+    db.query(sql, [userId, doctorId]);
+
+    res.send({
+        is_fav: !isFav,
+    });
+});
+
+router.get('/get_jinlyi_time/:DOCTOR_ID', async function(req, res, next) {
+    const doctorId = req.params.DOCTOR_ID;
+    var arr = [];
+
+
+    await new Promise(function(resolve, reject) {
+        var sql = `SELECT * FROM JINLYO_TIME_tbl WHERE ID = ?`;
+        db.query(sql, doctorId, function(err, rows, fields) {
+            // console.log(rows);
+            if (!err) {
+                resolve(rows);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        arr = data;
+    });
+
+    var gbn = '';
+    await new Promise(function(resolve, reject) {
+        resolve(getJinlyoGbn(doctorId));
+    }).then(function(data) {
+        gbn = data;
+    });
+
+
+    res.send({
+        JINLYO_TIME: arr,
+        JINLYO_GBN: gbn,
+        YOIL: moment().format('ddd').toUpperCase(),
+    });
+});
+
+async function getJinlyoGbn(doctorId) {
+    const yoil = moment().format('ddd').toUpperCase();
+    const time = moment().format('HH:mm');
+
+    var gbn = '진료종료';
+
+    //진료시간을 체크 한다!!
+    await new Promise(function(resolve, reject) {
+        var sql = `SELECT COUNT(*) as CNT FROM JINLYO_TIME_tbl WHERE ID = ? AND YOIL = ? AND ? BETWEEN S_TM AND E_TM`;
+        db.query(sql, [doctorId, yoil, time], function(err, rows, fields) {
+            // console.log(rows);
+            if (!err) {
+                resolve(rows[0].CNT);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        if (data > 0) {
+            gbn = '진료중';
+        }
+    });
+    //
+
+    //휴식시간을 체크 한다!!
+    await new Promise(function(resolve, reject) {
+        var sql = `SELECT COUNT(*) as CNT FROM JINLYO_TIME_tbl WHERE ID = ? AND YOIL = ? AND ? BETWEEN H_S_TM AND H_E_TM`;
+        db.query(sql, [doctorId, yoil, time], function(err, rows, fields) {
+            // console.log(rows);
+            if (!err) {
+                resolve(rows[0].CNT);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        if (data > 0) {
+            gbn = '휴식중';
+        }
+    });
+    //
+
+    return gbn;
+}
+
+
+router.get('/', checkMiddleWare, async function(req, res, next) {
+
+    // await new Promise(function(resolve, reject) {
+    //     var sql = ``;
+    //     db.query(sql, function(err, rows, fields) {
+    //         console.log(rows);
+    //         if (!err) {
+    //
+    //         } else {
+    //             console.log(err);
+    //         }
+    //     });
+    // }).then(function(data) {
+    //
+    // });
+
+    res.send('doctor');
 });
 
 module.exports = router;

@@ -75,75 +75,7 @@ async function checkMiddleWare(req, res, next) {
 
 
 
-router.get('/is_member/:ID', checkMiddleWare, async function(req, res, next) {
-    var id = req.params.ID;
-    await new Promise(function(resolve, reject) {
-        var sql = `SELECT COUNT(*) as CNT, LEVEL1, NAME1, HP, FILENAME0 FROM MEMB_tbl WHERE ID = ?`;
-        db.query(sql, id, function(err, rows, fields) {
-            if (!err) {
-                if (rows[0].CNT > 0) {
-                    var sql = `UPDATE MEMB_tbl SET LDATE = NOW() WHERE ID = ?`;
-                    db.query(sql, id);
-                }
-                resolve(rows[0]);
-            } else {
-                console.log(err);
-            }
-        });
-    }).then(function(data) {
-        res.send(data);
-    });
-});
 
-
-router.post('/login', checkMiddleWare, async function(req, res, next) {
-    var id = req.body.ID;
-    var hp = req.body.HP;
-    var name1 = req.body.NAME1;
-    var filename0 = req.body.FILENAME0;
-
-    if (filename0 != '') {
-        filename0 = filename0 + '|프로필이미지';
-    }
-
-    //처음 가입자는 무조건 레벨 9
-    await new Promise(function(resolve, reject) {
-        var sql = `INSERT INTO MEMB_tbl SET ID = ?, NAME1 = ?, FILENAME0 = ?, HP = ?, LEVEL1 = 9, WDATE = NOW(), LDATE = NOW()`;
-        console.log(sql, [id, name1, filename0, hp]);
-        db.query(sql, [id, name1, filename0, hp], function(err, rows, fields) {
-            if (!err) {
-                resolve(1);
-            } else {
-                console.log(err);
-            }
-        });
-    }).then(function(data) {
-        res.send({
-            code: 1,
-            ID: id,
-            LEVEL1: 9,
-            NAME1: name1,
-            HP: hp,
-        });
-    });
-});
-
-router.get('/myinfo/:ID', checkMiddleWare, async function(req, res, next) {
-    var id = req.params.ID;
-
-    await new Promise(function(resolve, reject) {
-        var sql = `SELECT NAME1, FILENAME0, HP, LEVEL1 FROM MEMB_tbl WHERE ID = ?`;
-        db.query(sql, id, function(err, rows, fields) {
-            if (!err) {
-                resolve(rows[0]);
-            } else {
-                console.log(err);
-            }
-        });
-    }).then(function(data) {
-        res.send(data);
-    });
-});
 
 
 router.get('/get_talk_details', checkMiddleWare, async function(req, res, next) {
@@ -167,7 +99,7 @@ router.get('/get_talk_details', checkMiddleWare, async function(req, res, next) 
 router.post('/create_room', checkMiddleWare, async function(req, res, next) {
     var roomKey = req.body.ROOM_KEY;
     var doctorId = req.body.DOCTOR_ID;
-    var myId = req.body.USER_ID;
+    var userId = req.body.USER_ID;
     var myName = req.body.MY_NAME;
     var myThumb = req.body.MY_THUMB;
     var answer0 = req.body.ANSWER0;
@@ -178,23 +110,25 @@ router.post('/create_room', checkMiddleWare, async function(req, res, next) {
 
     //방이 있는지 확인
     var cnt = 0;
+    var state = 0;
     await new Promise(function(resolve, reject) {
-        sql = "SELECT COUNT(*) as CNT FROM ROOM_tbl WHERE ROOM_KEY = ?";
+        sql = "SELECT COUNT(*) as CNT, STATE FROM ROOM_tbl WHERE ROOM_KEY = ?";
         db.query(sql, roomKey, function(err, rows, fields) {
             console.log(rows);
             if (!err) {
-                resolve(rows[0].CNT);
+                resolve(rows[0]);
             } else {
                 console.log(err);
             }
         });
     }).then(function(data) {
-        cnt = data;
+        cnt = data.CNT;
+        state = data.STATE;
     });
     //
 
     if (cnt == 0) {
-        //채팅방 만들고...
+        //채팅방 만들고... 채팅방에 초진정보도 넣어준다!!
         sql = `INSERT INTO ROOM_tbl SET
                 ROOM_KEY = ?,
                 USER_ID = ?,
@@ -202,33 +136,75 @@ router.post('/create_room', checkMiddleWare, async function(req, res, next) {
                 LAST_MSG = '',
                 STATE = ?,
                 WDATE = ?,
-                CDATE = NOW()`;
-        db.query(sql, [roomKey, myId, doctorId, 0, new Date().getTime()]);
-    }
-
-    //진료테이블에 넣어주기...
-    await new Promise(function(resolve, reject) {
-        sql = `INSERT INTO JINLYO_tbl SET
-                USER_ID = ?,
-                DOCTOR_ID = ?,
+                CDATE = NOW(),
                 ANSWER0 = ?,
                 ANSWER1 = ?,
-                ANSWER2 = ?,
-                MEMO = '진료신청 되었습니다.',
-                WDATE = NOW(),
-                LDATE = NOW() `;
-        db.query(sql, [myId, doctorId, answer0, answer1, answer2], function(err, rows, fields) {
-            console.log(rows);
-            if (!err) {
-                resolve(rows);
-            } else {
-                console.log(err);
-            }
+                ANSWER2 = ? `;
+        db.query(sql, [roomKey, userId, doctorId, 0, new Date().getTime(), answer0, answer1, answer2]);
+
+
+        //닥터에게 푸시 보내주기!!!
+        var fcmArr = [];
+        await new Promise(function(resolve, reject) {
+            var sql = "SELECT FCM FROM MEMB_tbl WHERE ID = ?"
+            db.query(sql, doctorId, function(err, rows, fields) {
+                console.log(rows[0].FCM);
+                if (!err) {
+                    resolve(rows[0].FCM);
+                } else {
+                    console.log(err);
+                }
+            });
+        }).then(function(data) {
+            fcmArr.push(data);
         });
-    }).then(function(data) {
-        res.send(data);
-    });
-    //
+
+        var fields = {};
+        fields['notification'] = {};
+        fields['data'] = {};
+
+        fields['registration_ids'] = fcmArr;
+        fields['notification']['title'] = process.env.APP_NAME;
+        fields['notification']['body'] = myName + '님 께서 진료 상담 요청 하였습니다.';
+        fields['notification']['click_action'] = 'NOTI_CLICK'; //액티비티 다이렉트 호출
+        fields['priority'] = 'high';
+        fields['data']['menu_flag'] = 'home';               //키값은 대문자 안먹음..
+        // fields['data']['room_key'] = roomKey;               //키값은 대문자 안먹음..
+
+        var request = require('request');
+        var options = {
+            'method': 'POST',
+            'url': 'https://fcm.googleapis.com/fcm/send',
+            'headers': {
+                'Content-Type': 'application/json',
+                'Authorization': 'key=AAAA_B0I4P0:APA91bFUZCJ9bOeARbhKonYiKXi4_1j1QbUkG4I03-dCGw83Qytmw5dz5pH6umm3w37CvYlwA-5KEQD9nFs0rzixTeoimBm1JGJFOa-JHXkA248fcdouvStdmCIYje-xYm5oe25--S20'
+            },
+            body: JSON.stringify(fields)
+        };
+        request(options, function (error, response) {
+            //알림내역저장
+            var sql = "INSERT INTO ALARM_tbl SET ID = ?, MESSAGE = ?, WDATE = NOW()";
+            db.query(sql, [doctorId, myName + '님 께서 진료 상담 요청 하였습니다.']);
+            //
+
+            res.send({
+                code: 1,
+                msg: '진료 접수 되었습니다.\n접수 현황은 상담 탭에서 확인 할 수 있습니다.'
+            });
+        });
+        //
+    } else {
+        var msg = '이미 접수된 진료 내역이 있습니다.\n접수 현황은 상담 탭에서 확인 할 수 있습니다.';
+        if (state == 3 || state == 2) {
+            msg = '차단, 거절등의 사유로 진료불가능 상태입니다.';
+        }
+
+        res.send({
+            code: 0,
+            msg: msg,
+        });
+    }
+
 
 
 });
@@ -242,16 +218,20 @@ router.get('/room_list/:ID/:LEVEL1', checkMiddleWare, async function(req, res, n
             sql = `SELECT
                     A.*,
                     (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as ROOM_NAME,
-                    (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as THUMB
+                    (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as THUMB,
+                    (SELECT COUNT(*) FROM TALK_NO_READ_tbl WHERE ID = A.USER_ID AND ROOM_KEY = A.ROOM_KEY) as NO_READ_CNT
                     FROM ROOM_tbl as A
-                    WHERE A.USER_ID = ?`;
+                    WHERE A.USER_ID = ?
+                    AND STATE IN (0,1) `;
         } else {
             sql = `SELECT
                     A.*,
                     (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.USER_ID) as ROOM_NAME,
-                    (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.USER_ID) as THUMB
+                    (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.USER_ID) as THUMB,
+                    (SELECT COUNT(*) FROM TALK_NO_READ_tbl WHERE ID = A.DOCTOR_ID AND ROOM_KEY = A.ROOM_KEY) as NO_READ_CNT
                     FROM ROOM_tbl as A
-                    WHERE A.DOCTOR_ID = ?`;
+                    WHERE A.DOCTOR_ID = ?
+                    AND STATE IN (0,1) `;
         }
 
         db.query(sql, id, function(err, rows, fields) {
@@ -272,7 +252,13 @@ router.get('/get_room_info/:ROOM_KEY', checkMiddleWare, async function(req, res,
     var roomKey = req.params.ROOM_KEY;
 
     await new Promise(function(resolve, reject) {
-        var sql = "SELECT * FROM ROOM_tbl WHERE ROOM_KEY = ?";
+        var sql = `
+            SELECT
+            A.*,
+            (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_NAME,
+            (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.USER_ID) as USER_NAME
+            FROM ROOM_tbl as A
+            WHERE A.ROOM_KEY = ?`;
         db.query(sql, roomKey, function(err, rows, fields) {
             console.log(rows);
             if (!err) {
@@ -286,9 +272,10 @@ router.get('/get_room_info/:ROOM_KEY', checkMiddleWare, async function(req, res,
     });
 });
 
-router.post('/set_room_state/:ROOM_KEY', checkMiddleWare, async function(req, res, next) {
+router.post('/set_room_state', checkMiddleWare, async function(req, res, next) {
     var state = req.body.STATE;
-    var roomKey = req.params.ROOM_KEY;
+    var roomKey = req.body.ROOM_KEY;
+    var yourId = req.body.YOUR_ID;
 
     await new Promise(function(resolve, reject) {
         var sql = "UPDATE ROOM_tbl SET STATE = ? WHERE ROOM_KEY = ?";
@@ -300,82 +287,80 @@ router.post('/set_room_state/:ROOM_KEY', checkMiddleWare, async function(req, re
                 console.log(err);
             }
         });
-    }).then(function(data) {
-        res.send(data);
     });
-});
 
-
-router.get('/jinlyo_list', checkMiddleWare, async function(req, res, next) {
-    var userId = req.query.USER_ID;
-    var doctorId = req.query.DOCTOR_ID;
-
+    //상대에게 푸시 보내주기!!!
+    var fcmArr = [];
     await new Promise(function(resolve, reject) {
-        var sql = "";
-
-        if (doctorId == '') {
-            sql = `
-                SELECT
-                A.*,
-                (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as NAME1,
-                (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as THUMB
-                FROM
-                JINLYO_tbl as A
-                WHERE USER_ID = ? ORDER BY WDATE DESC
-            `;
-        } else {
-            sql = `
-                SELECT
-                A.*,
-                (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.USER_ID) as NAME1,
-                (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.USER_ID) as THUMB
-                FROM
-                JINLYO_tbl as A
-                WHERE USER_ID = ? AND DOCTOR_ID = ? ORDER BY WDATE DESC
-            `;
-        }
-
-        db.query(sql, [userId, doctorId], function(err, rows, fields) {
-            console.log(rows);
+        var sql = "SELECT FCM FROM MEMB_tbl WHERE ID = ?"
+        db.query(sql, yourId, function(err, rows, fields) {
+            console.log(rows[0].FCM);
             if (!err) {
-                resolve(rows);
+                resolve(rows[0].FCM);
             } else {
                 console.log(err);
             }
         });
     }).then(function(data) {
-        res.send(data);
+        fcmArr.push(data);
     });
+
+    var msg = "";
+    if (state == 1) {
+        msg = '진료 상담이 수락 되었습니다.'
+    } else if (state == 2) {
+        msg = '진료 상담이 거절 되었습니다.'
+    } else {
+        res.send('');
+        return;
+    }
+
+    var fields = {};
+    fields['notification'] = {};
+    fields['data'] = {};
+
+    fields['registration_ids'] = fcmArr;
+    fields['notification']['title'] = process.env.APP_NAME;
+    fields['notification']['body'] = msg;
+    fields['notification']['click_action'] = 'NOTI_CLICK'; //액티비티 다이렉트 호출
+    fields['priority'] = 'high';
+    fields['data']['menu_flag'] = '';               //키값은 대문자 안먹음..
+
+    var request = require('request');
+    var options = {
+        'method': 'POST',
+        'url': 'https://fcm.googleapis.com/fcm/send',
+        'headers': {
+            'Content-Type': 'application/json',
+            'Authorization': 'key=AAAA_B0I4P0:APA91bFUZCJ9bOeARbhKonYiKXi4_1j1QbUkG4I03-dCGw83Qytmw5dz5pH6umm3w37CvYlwA-5KEQD9nFs0rzixTeoimBm1JGJFOa-JHXkA248fcdouvStdmCIYje-xYm5oe25--S20'
+        },
+        body: JSON.stringify(fields)
+    };
+    request(options, function (error, response) {
+        //알림내역저장
+        var sql = "INSERT INTO ALARM_tbl SET ID = ?, MESSAGE = ?, WDATE = NOW()";
+        db.query(sql, [yourId, msg]);
+        //
+        res.send(response.body);
+    });
+    //
 });
 
-router.get('/jinlyo_detail/:IDX', checkMiddleWare, async function(req, res, next) {
-    var idx = req.params.IDX;
+
+
+router.get('/del_no_read_count/:ROOM_KEY/:ID', async function(req, res, next) {
+    const roomKey = req.params.ROOM_KEY;
+    const id = req.params.ID;
 
     await new Promise(function(resolve, reject) {
-        // var sql = `
-        //     SELECT
-        //     A.*,
-        //     (SELECT ID FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_ID,
-        //     (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_NAME,
-        //     (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_THUMB,
-        //     (SELECT SOGE FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_SOGE,
-        //     (SELECT HOSPITAL FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_HOSPITAL,
-        //     (SELECT CATEGORYS FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_CATEGORYS
-        //     FROM JINLYO_tbl as A WHERE A.IDX = ?
-        // `;
-
-        var sql = ` SELECT * FROM JINLYO_tbl as A WHERE A.IDX = ? `;
-
-        db.query(sql, idx, function(err, rows, fields) {
-            console.log(rows);
+        var sql = `DELETE FROM TALK_NO_READ_tbl WHERE ROOM_KEY = ? AND ID = ?`;
+        db.query(sql, [roomKey, id],function(err, rows, fields) {
             if (!err) {
-                resolve(rows[0]);
+                res.send(rows);
             } else {
                 console.log(err);
             }
         });
-    }).then(function(data) {
-        res.send(data);
     });
 });
 

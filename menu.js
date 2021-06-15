@@ -35,7 +35,7 @@ var menu = [{
             },
             {
                 "title": "1:1문의",
-                "link": "/admin/page/counsel"
+                "link": "/admin/page/cscenter"
             },
             {
                 "title": "자주묻는질문",

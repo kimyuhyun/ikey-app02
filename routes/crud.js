@@ -151,12 +151,14 @@ router.post('/write', checkMiddleWare, upload.array('FILES'), async function(req
     for (key in req.body) {
         if (req.body[key] != 'null') {
             if (key == 'PASS1') {
-                sql += key + '= PASSWORD(?), ';
+                if (req.body['PASS1'] != '') {
+                    sql += key + '= PASSWORD(?), ';
+                    records.push(req.body[key]);
+                }
             } else {
                 sql += key + '= ?, ';
+                records.push(req.body[key]);
             }
-
-            records.push(req.body[key]);
         }
     }
 
@@ -166,8 +168,10 @@ router.post('/write', checkMiddleWare, upload.array('FILES'), async function(req
         sql = "INSERT INTO " + table + " SET " + sql + " WDATE = NOW(), LDATE = NOW()";
         await db.query(sql, records, function(err, rows, fields) {
             if (!err) {
+                console.log(rows);
                 var arr = new Object();
                 arr['code'] = 1;
+                arr['insertId'] = rows.insertId;
                 arr['msg'] = '등록 되었습니다.';
                 res.send(arr);
             } else {
@@ -193,8 +197,28 @@ router.post('/write', checkMiddleWare, upload.array('FILES'), async function(req
             }
         });
     }
-    console.log(sql, records);
+    // console.log(sql, records);
 });
+
+router.post('/delete', checkMiddleWare, async function(req, res, next) {
+    const table = req.body.TABLE;
+    const idx = req.body.IDX;
+
+    const sql = "DELETE FROM " + table + " WHERE IDX = ?";
+
+    await db.query(sql, idx, function(err, rows, fields) {
+        if (!err) {
+            console.log(rows);
+            res.send({
+                code: 1,
+                msg: '삭제 되었습니다.'
+            });
+        } else {
+            res.send(err);
+        }
+    });
+});
+
 
 router.get('/view', checkMiddleWare, async function(req, res, next) {
     console.log('/view', req.body);

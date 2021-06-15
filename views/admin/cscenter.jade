@@ -19,6 +19,11 @@ block content
                         label 내용
                         div
                             textarea(name='MEMO', rows='5')
+                    
+                    div(class='w2ui-field w2ui-span2')
+                        label 답변
+                        div
+                            textarea(name='COMMENT', rows='5')
 
                     div(class='w2ui-field w2ui-span2')
                         label 파일
@@ -83,7 +88,7 @@ block content
                                     eval("var fileName = form.record.FILENAME"+i+".split('|')[1];");
 
                                     var html = '';
-                                    html += '<a href="!{ hostname }/'+fileLink+'" target="_blank">';
+                                    html += '<a href="'+fileLink+'" target="_blank">';
                                     html += fileName;
                                     html += '</a>';
 
@@ -109,10 +114,10 @@ block content
                 ],
                 columns: [
                     { field: 'IDX', caption: '번호', size: '50px', sortable: true, resizable: true, attr: 'align=center' },	//세팅 해줘야함
-                    { field: 'FILENAME0', caption: '썸네일', size: '50px', sortable: true, resizable: true, attr: 'align=center',	//세팅 해줘야함
+                    { field: 'FILENAME0', caption: '썸네일', size: '50px', sortable: true, resizable: true, style: 'padding: 0px;',	//세팅 해줘야함
                         render: function(record) {
                             if (record.FILENAME0 != null && record.FILENAME0 != '') {
-                                return '<img src="!{ hostname }/' + record.FILENAME0.split("|")[0] + '" style="width: 30px; height: 30px;" />';
+                                return '<img src="' + record.FILENAME0.split("|")[0] + '" style="width: 50px; height: 30px; margin: -3px 0 0 -3px;" />';
                             }
                         }
                     },
@@ -133,8 +138,9 @@ block content
             form: {
                 name: 'form',
                 fields: [
-                    { field: 'TITLE', type: 'text', required: true },	//세팅 해줘야함
-                    { field: 'MEMO', type: 'textarea' },	//세팅 해줘야함
+                    { field: 'TITLE', type: 'text', disabled: true },	//세팅 해줘야함
+                    { field: 'MEMO', type: 'textarea', disabled: true, },	//세팅 해줘야함
+                    { field: 'COMMENT', type: 'textarea', required: true },	//세팅 해줘야함
                     { field: 'UPLOADED_FILES', type: 'enum', 
                         options: {
                             onRemove: function(e) {                                
@@ -177,11 +183,9 @@ block content
 
                         //- 세팅해줘야함.
                         this.record.table = table;
-                        this.record.ID = "#{ myinfo.ID }";
-                        this.record.NAME1 = "#{ myinfo.NAME1 }";
                         this.record.BOARD_ID = "#{ board_id }";
                         //
-                        
+
                         var formData = new FormData();
                         var self = this;
                         for (var key in this.record) {
@@ -189,27 +193,27 @@ block content
                                 formData.append(key, self.record[key]);
                             }
                         }
-                        
+
                         for (var obj of this.record['FILES']) {
                             formData.append('FILES', obj.file);                            
                         }
-                        
-                        
+
                         axios.post('/crud/write', formData).then(function(res) {
                             console.dir(res.data);
                             $("#save").text("입력");
                             w2ui.form.clear();
-                            
+
                             if (res.data.code == 1) {                                
-                                setTimeout(function(){
+                                setTimeout(function() {
                                     w2ui.grid.reload();
                                 }, 500);
                             } else if (res.data.code == 2) {
-                                setTimeout(function(){
+                                setTimeout(function() {
                                     w2ui.grid.set(res.data.record.IDX, res.data.record, false);
-                                    w2ui.grid.selectNone();    
                                 }, 500);
                             }
+                            
+                            w2alert(res.data.msg);
                         });
                     }
                 },

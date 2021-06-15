@@ -18,7 +18,7 @@ block content
                     div(class='w2ui-field w2ui-span2')
                         label 내용
                         div
-                            textarea(name='MEMO', rows='5')
+                            textarea(name='MEMO', rows='10')
 
                     div(class='w2ui-field w2ui-span2')
                         label 파일
@@ -83,7 +83,7 @@ block content
                                     eval("var fileName = form.record.FILENAME"+i+".split('|')[1];");
 
                                     var html = '';
-                                    html += '<a href="!{ hostname }/'+fileLink+'" target="_blank">';
+                                    html += '<a href="'+fileLink+'" target="_blank">';
                                     html += fileName;
                                     html += '</a>';
 
@@ -112,7 +112,7 @@ block content
                     { field: 'FILENAME0', caption: '썸네일', size: '50px', sortable: true, resizable: true, attr: 'align=center',	//세팅 해줘야함
                         render: function(record) {
                             if (record.FILENAME0 != null && record.FILENAME0 != '') {
-                                return '<img src="!{ hostname }/' + record.FILENAME0.split("|")[0] + '" style="width: 30px; height: 30px;" />';
+                                return '<img src="' + record.FILENAME0.split("|")[0] + '" style="width: 50px; height: 30px; margin: -3px 0 0 -3px;" />';
                             }
                         }
                     },

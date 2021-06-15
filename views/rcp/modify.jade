@@ -1,0 +1,70 @@
+extends layout
+
+block content
+    form(method='post', action='/rcp/write?token=#{info.token}', enctype='multipart/form-data')
+        input(type='hidden', name='DOCTOR_ID', value='#{info.ID}')
+        input(type='hidden', name='USER_ID', value='#{row.USER_ID}')
+        input(type='hidden', name='IDX', value='#{row.IDX}')
+        
+        div(class='form-floating mb-3')
+            input(class='form-control', value='#{row.USER_NAME}', readonly)                
+            label(class='form-label') 환자이름
+            
+        div(class='form-floating mb-3')            
+            input(class='form-control', name='PRICE', id='PRICE', type='text', value='#{row.PRICE}', required)
+            label(class='form-label') 진료비를 입력해주세요.
+        
+        div(class='form-floating mb-3')
+            input(class='form-control', name='STATUS_MSG', type='text', value='#{row.STATUS_MSG}')
+            label(class='form-label') 메시지
+            
+        div(class='mb-3')
+            label(class='form-label mb-0') 처방전
+            input(class='form-control', name='RECIPE', type='file')
+            if row.RECIPE != ''
+                a(href='#{row.RECIPE}', target='_blank') [보기]
+            
+        div(class='mb-3')
+            label(class='form-label mb-0') 영수증
+            input(class='form-control', name='RECEIPT', type='file')
+            if row.RECEIPT != ''
+                a(href='#{row.RECEIPT}', target='_blank') [보기]
+
+        div(class='d-flex justify-content-between')
+            button(class='btn btn-danger', type='button', onclick='del()')
+                i(class="fas fa-trash-alt")  삭제
+            
+            button(class='btn btn-primary', type='submit')
+                i(class="fas fa-check")  수정
+
+    
+    script.
+        function del() {
+            if (confirm('삭제하시겠습니까?')) {
+                location.href = '/rcp/#{info.token}/delete/#{row.IDX}/#{row.USER_ID}';
+            }
+        }
+        function updateTextView(_obj){
+            var num = getNumber(_obj.val());
+            if(num==0){
+                _obj.val('');
+            } else {
+                _obj.val(num.toLocaleString());
+            }
+        }
+        function getNumber(_str){
+            var arr = _str.split('');
+            var out = new Array();
+            for(var cnt=0;cnt<arr.length;cnt++){
+                if(isNaN(arr[cnt])==false){
+                    out.push(arr[cnt]);
+                }
+            }
+            return Number(out.join(''));
+        }
+        $(document).ready(function(){
+            $('#PRICE').on('keyup',function(){
+                updateTextView($(this));
+            });            
+            updateTextView($('#PRICE'));
+        });
