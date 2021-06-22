@@ -40,8 +40,8 @@ app.use(session({
     saveUninitialized: true,
     store: new MySQLStore(db.connAccount),
     cookie: {
-        // maxAge: 24000 * 60 * 60 // 쿠키 유효기간 24시간
-        maxAge: 1000 * 60 * 60 // 쿠키 유효기간 1시간
+        maxAge: 24000 * 60 * 60 // 쿠키 유효기간 24시간
+        // maxAge: 1000 * 60 * 60 // 쿠키 유효기간 1시간
     }
 }));
 
@@ -85,6 +85,7 @@ app.use(function(req, res, next) {
     // res.status(404).send('페이지가 없습니다.');
     // res.status(500).send('500 에러');
     next(createError(404));
+
 });
 
 // error handler

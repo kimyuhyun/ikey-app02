@@ -9,6 +9,8 @@ var utils = require('../Utils');
 var requestIp = require('request-ip');
 var moment = require('moment');
 
+// http://52.79.237.255:3000/push/send/naver_33776508/asdasd
+// http://localhost:3000/push/send/naver_33776508/asdasd
 
 router.get('/send/:id/:msg', async function(req, res, next) {
     const id = req.params.id;
@@ -56,7 +58,7 @@ router.get('/send/:id/:msg', async function(req, res, next) {
             error: error,
             body: response.body,
         });
-        
+
         //알림내역저장
         const sql = "INSERT INTO ALARM_tbl SET ID = ?, MESSAGE = ?, WDATE = NOW()";
         db.query(sql, [id, msg]);
