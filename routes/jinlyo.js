@@ -81,6 +81,7 @@ router.get('/jinlyo_list', checkMiddleWare, async function(req, res, next) {
         const sql = `
             SELECT
             A.*,
+            (SELECT HOSPITAL FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as HOSPITAL,
             (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DOCTOR_NAME,
             (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DOCTOR_THUMB
             FROM
@@ -171,6 +172,23 @@ router.get('/get_chojin_data/:ROOM_KEY', checkMiddleWare, async function(req, re
 });
 
 
+router.get('/get_jinlyobi/:IDX', checkMiddleWare, async function(req, res, next) {
+    const idx = req.params.IDX;
+
+    await new Promise(function(resolve, reject) {
+        var sql = `SELECT IS_PAYMENT, PRICE, APP_USE_PRICE, RCP_PRICE, DLV_PRICE FROM JINLYOBI_tbl WHERE IDX = ?`;
+        db.query(sql, idx, function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                resolve(rows[0]);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        res.send(data);
+    });
+});
 
 router.get('/jinlyobi_payment_ok', checkMiddleWare, async function(req, res, next) {
     var idx = req.query.IDX;
@@ -194,8 +212,6 @@ router.get('/jinlyobi_payment_ok', checkMiddleWare, async function(req, res, nex
             }
         });
     });
-
-
 });
 
 router.get('/', checkMiddleWare, async function(req, res, next) {

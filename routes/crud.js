@@ -119,7 +119,7 @@ router.get('/iterator', checkMiddleWare, async function(req, res, next) {
 });
 
 router.post('/write', checkMiddleWare, upload.array('FILES'), async function(req, res, next) {
-    var table = req.body.table;
+    var table = req.body.TABLE;
     var idx = req.body.IDX;
 
     var uploadedLength = 0;
@@ -133,12 +133,12 @@ router.post('/write', checkMiddleWare, upload.array('FILES'), async function(req
         await utils.setResize(req.files[i]).then(function(newFileName) {
             newFileName = process.env.HOST_NAME + '/' + newFileName;
             console.log('newFileName', newFileName);
-            eval("req.body.FILENAME" + fileIndex + " = newFileName + '|' + req.files[" + i + "].originalname");
+            eval("req.body.FILENAME" + fileIndex + " = newFileName");
         });
     }
 
     delete req.body.recid;
-    delete req.body.table;
+    delete req.body.TABLE;
     delete req.body.IDX;
     delete req.body.WDATE;
     delete req.body.LDATE;
@@ -229,7 +229,7 @@ router.get('/view', checkMiddleWare, async function(req, res, next) {
 });
 
 router.post('/remove', checkMiddleWare, async function(req, res, next) {
-    var table = req.query.table;
+    var table = req.query.TABLE;
     var params = JSON.parse(req.body.request);
     console.log(params);
     var sql = "";

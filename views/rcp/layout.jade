@@ -22,13 +22,16 @@ html
 
     body(class='bg-secondary')
         div(class='p-0')
-            div(style='width: 100%; max-width: 640px; height: 100vh; margin: 0 auto;', class='bg-light')
+            div(style='width: 100%; max-width: 1000px; height: 100vh; margin: 0 auto;', class='bg-light')
     
-                - var thumb = info.FILENAME0.split('|')[0]
+                - var thumb = info.FILENAME0.split('|')[0];
+                - if (thumb == '') {
+                -     thumb = '/images/no_pic.png';
+                - }
                 
                 div(class='d-flex flex-row bg-primary bg-gradient p-2 shadow')
                     div(class='d-flex align-self-center')
-                        a(href='/rcp/#{info.token}')
+                        a(href='/rcp/#{info.token}')                            
                             img(src='#{thumb}' class='rounded-circle' style='width: 50px; height: 50px;')
                     div(class='d-flex align-self-center ms-2 w-100')
                         div(class='d-flex align-self-center text-white')
@@ -36,7 +39,8 @@ html
                             | (#{info.HOSPITAL})
                             
                         div(class='ms-auto me-2', style='cursor: pointer;', onclick='location.reload();')
-                            i(class='h3 mb-0 fas fa-redo-alt text-white')
+                            button(class='btn btn-primary')
+                                i(class='h3 mb-0 fas fa-redo-alt text-white')
                         
                 div(class='p-2 mt-4')
                     block content

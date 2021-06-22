@@ -12,7 +12,19 @@ block content
         div(class='form-floating mb-3')            
             input(class='form-control', id='PRICE', name='PRICE', type='text', required)
             label(class='form-label') 진료비를 입력해주세요.
-
+            
+        div(class='form-floating mb-3')
+            input(class='form-control', name='APP_USE_PRICE', id='APP_USE_PRICE', type='text')
+            label(class='form-label') 앱이용료를 입력해주세요.
+            
+        div(class='form-floating mb-3')
+            input(class='form-control', name='RCP_PRICE', id='RCP_PRICE', type='text')
+            label(class='form-label') 제조비를 입력해주세요.
+            
+        div(class='form-floating mb-3')
+            input(class='form-control', name='DLV_PRICE', id='DLV_PRICE', type='text')
+            label(class='form-label') 배송비를 입력해주세요.
+            
         div(class='form-floating mb-3')
             input(class='form-control', name='STATUS_MSG', type='text', value='진료비가 청구되었습니다.')
             label(class='form-label') 메시지

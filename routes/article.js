@@ -73,23 +73,45 @@ async function checkMiddleWare(req, res, next) {
     next();
 }
 
-router.get('/list/:BOARD_ID', checkMiddleWare, async function(req, res, next) {
-    const boardId = req.params.BOARD_ID;
+router.get('/list', checkMiddleWare, async function(req, res, next) {
+    const boardId = req.query.BOARD_ID;
+    const id = req.query.ID;
+    var page = req.query.PAGE;
+
+    page = page * 20;
+
+    var arr = [];
+    arr.push(boardId);
 
     await new Promise(function(resolve, reject) {
         var sql = `
             SELECT
-            A.*,
+            A.IDX,
+            A.BOARD_ID,
+            A.ID,
+            A.TITLE,
+            A.NAME1,
+            A.FILENAME0,
+            A.SEE,
+            A.WDATE,
+            A.COMMENT,
             (SELECT COUNT(*) FROM BOARD_tbl WHERE PARENT_IDX = A.IDX AND STEP = 2) as REPLY_CNT,
             (SELECT COUNT(*) FROM BOARD_LIKE_tbl WHERE BOARD_IDX = A.IDX) as LIKE1,
             (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.ID) as USER_THUMB
             FROM
             BOARD_tbl as A
             WHERE STEP = 1
-            AND BOARD_ID = ?
-            ORDER BY IDX DESC
-        `;
-        db.query(sql, boardId, function(err, rows, fields) {
+            AND BOARD_ID = ? `;
+        if (id != '') {
+            sql += ` AND ID = ? `;
+            arr.push(id);
+        }
+        sql += ` ORDER BY IDX DESC `;
+        sql += ` LIMIT ` + page + `, 20 `;
+
+
+
+        db.query(sql, arr, function(err, rows, fields) {
             console.log(rows);
             if (!err) {
                 resolve(rows);
@@ -104,8 +126,7 @@ router.get('/list/:BOARD_ID', checkMiddleWare, async function(req, res, next) {
 });
 
 
-router.get('/list/:BOARD_ID/:IDX/:ID', checkMiddleWare, async function(req, res, next) {
-    const boardId = req.params.BOARD_ID;
+router.get('/list/:IDX/:ID', checkMiddleWare, async function(req, res, next) {
     const idx = req.params.IDX;
     const id = req.params.ID;
 
@@ -119,11 +140,10 @@ router.get('/list/:BOARD_ID/:IDX/:ID', checkMiddleWare, async function(req, res,
             (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.ID) as USER_THUMB
             FROM
             BOARD_tbl as A
-            WHERE BOARD_ID = ?
-            AND IDX = ?
+            WHERE IDX = ?
             ORDER BY IDX DESC
         `;
-        db.query(sql, [id, boardId, idx], function(err, rows, fields) {
+        db.query(sql, [id, idx], function(err, rows, fields) {
             console.log(rows);
             if (!err) {
                 resolve(rows[0]);

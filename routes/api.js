@@ -177,7 +177,7 @@ router.post('/create_room', checkMiddleWare, async function(req, res, next) {
             'url': 'https://fcm.googleapis.com/fcm/send',
             'headers': {
                 'Content-Type': 'application/json',
-                'Authorization': 'key=AAAA_B0I4P0:APA91bFUZCJ9bOeARbhKonYiKXi4_1j1QbUkG4I03-dCGw83Qytmw5dz5pH6umm3w37CvYlwA-5KEQD9nFs0rzixTeoimBm1JGJFOa-JHXkA248fcdouvStdmCIYje-xYm5oe25--S20'
+                'Authorization': 'key=' + process.env.FCM_SERVER_KEY
             },
             body: JSON.stringify(fields)
         };
@@ -332,7 +332,7 @@ router.post('/set_room_state', checkMiddleWare, async function(req, res, next) {
         'url': 'https://fcm.googleapis.com/fcm/send',
         'headers': {
             'Content-Type': 'application/json',
-            'Authorization': 'key=AAAA_B0I4P0:APA91bFUZCJ9bOeARbhKonYiKXi4_1j1QbUkG4I03-dCGw83Qytmw5dz5pH6umm3w37CvYlwA-5KEQD9nFs0rzixTeoimBm1JGJFOa-JHXkA248fcdouvStdmCIYje-xYm5oe25--S20'
+            'Authorization': 'key=' + process.env.FCM_SERVER_KEY
         },
         body: JSON.stringify(fields)
     };

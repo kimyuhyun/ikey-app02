@@ -1,14 +1,14 @@
-var express = require('express');
-var router = express.Router();
-var bodyParser = require('body-parser');
-var fs = require('fs');
-var db = require('../db');
-var multer = require('multer');
-var uniqid = require('uniqid');
-var utils = require('../Utils');
-var requestIp = require('request-ip');
-var moment = require('moment');
-
+const express = require('express');
+const router = express.Router();
+const bodyParser = require('body-parser');
+const fs = require('fs');
+const db = require('../db');
+const multer = require('multer');
+const uniqid = require('uniqid');
+const utils = require('../Utils');
+const requestIp = require('request-ip');
+const moment = require('moment');
+const crypto = require('crypto');
 
 var upload = multer({
     storage: multer.diskStorage({
@@ -75,18 +75,23 @@ async function checkMiddleWare(req, res, next) {
 
 
 router.post('/user_login', checkMiddleWare, async function(req, res, next) {
-    var id = req.body.ID;
-    var name1 = req.body.NAME1;
-    var filename0 = req.body.FILENAME0;
+    const id = req.body.ID;
+    const name1 = req.body.NAME1;
+    const filename0 = req.body.FILENAME0;
+    var hp = req.body.HP;
 
-    if (filename0 != '') {
-        filename0 = filename0 + '|프로필이미지';
-    }
+    //핸드폰번호 암호화
+    const cipher = crypto.createCipher('aes-256-cbc', 'ikey001');
+    var result = cipher.update(hp, 'utf8', 'base64');
+    result += cipher.final('base64');
+    hp = result;
+    //
+
 
     //처음 가입자는 무조건 레벨 9
     await new Promise(function(resolve, reject) {
-        var sql = `INSERT INTO MEMB_tbl SET ID = ?, NAME1 = ?, FILENAME0 = ?, LEVEL1 = 9, WDATE = NOW(), LDATE = NOW()`;
-        db.query(sql, [id, name1, filename0], function(err, rows, fields) {
+        var sql = `INSERT INTO MEMB_tbl SET ID = ?, NAME1 = ?, FILENAME0 = ?, HP = ?, LEVEL1 = 9, WDATE = NOW(), LDATE = NOW()`;
+        db.query(sql, [id, name1, filename0, hp], function(err, rows, fields) {
             if (!err) {
                 resolve(1);
             } else {
@@ -107,7 +112,7 @@ router.get('/myinfo/:ID', checkMiddleWare, async function(req, res, next) {
     var id = req.params.ID;
 
     await new Promise(function(resolve, reject) {
-        var sql = `SELECT ID, LEVEL1, NAME1, FILENAME0, WDATE FROM MEMB_tbl WHERE ID = ?`;
+        var sql = `SELECT ID, LEVEL1, NAME1, FILENAME0, HP, WDATE FROM MEMB_tbl WHERE ID = ?`;
         db.query(sql, id, function(err, rows, fields) {
             if (!err) {
                 resolve(rows[0]);
@@ -116,6 +121,20 @@ router.get('/myinfo/:ID', checkMiddleWare, async function(req, res, next) {
             }
         });
     }).then(function(data) {
+        console.log(data);
+
+        if (data.HP != '') {
+            //핸드폰번호 복호화
+            var hp = data.HP;
+            const decipher = crypto.createDecipher('aes-256-cbc', 'ikey001');
+            let result = decipher.update(hp, 'base64', 'utf8');
+            result += decipher.final('utf8');
+            data.HP = result;
+            //
+        }
+
+
+
         res.send(data);
     });
 });
@@ -239,7 +258,7 @@ router.get('/alarm/:ID', checkMiddleWare, async function(req, res, next) {
     const id = req.params.ID;
 
     await new Promise(function(resolve, reject) {
-        var sql = `SELECT MESSAGE, IS_READ, WDATE FROM ALARM_tbl WHERE ID = ?`;
+        var sql = `SELECT MESSAGE, IS_READ, WDATE FROM ALARM_tbl WHERE ID = ? ORDER BY IDX DESC`;
         db.query(sql, id, function(err, rows, fields) {
             if (!err) {
                 resolve(rows);
@@ -288,9 +307,40 @@ router.get('/is_alarm_no_read/:ID', checkMiddleWare, async function(req, res, ne
     });
 });
 
+router.post('/leave', checkMiddleWare, async function(req, res, next) {
+    const id = req.body.ID;
+    const sql = "DELETE FROM MEMB_tbl WHERE ID = ?";
+
+    await db.query(sql, id, function(err, rows, fields) {
+        if (!err) {
+            console.log(rows);
+            res.send({
+                code: 1,
+                msg: '삭제 되었습니다.'
+            });
+        } else {
+            res.send(err);
+        }
+    });
+});
+
+
+
+
 
 router.get('/', checkMiddleWare, async function(req, res, next) {
+    const cipher = crypto.createCipher('aes-256-cbc', 'ikey001');
+    var result = cipher.update('010-5181-8701', 'utf8', 'base64');
+    result += cipher.final('base64');
 
+    console.log(result);
+
+
+    const decipher = crypto.createDecipher('aes-256-cbc', 'ikey001');
+    let result2 = decipher.update(result, 'base64', 'utf8'); // 암호화할문 (base64, utf8이 위의 cipher과 반대 순서입니다.)
+    result2 += decipher.final('utf8'); // 암호화할문장 (여기도 base64대신 utf8)
+
+    console.log(result2);
     // await new Promise(function(resolve, reject) {
     //     var sql = ``;
     //     db.query(sql, function(err, rows, fields) {

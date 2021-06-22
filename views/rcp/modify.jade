@@ -10,9 +10,21 @@ block content
             input(class='form-control', value='#{row.USER_NAME}', readonly)                
             label(class='form-label') 환자이름
             
-        div(class='form-floating mb-3')            
+        div(class='form-floating mb-3')
             input(class='form-control', name='PRICE', id='PRICE', type='text', value='#{row.PRICE}', required)
             label(class='form-label') 진료비를 입력해주세요.
+            
+        div(class='form-floating mb-3')
+            input(class='form-control', name='APP_USE_PRICE', id='APP_USE_PRICE', type='text', value='#{row.APP_USE_PRICE}')
+            label(class='form-label') 앱이용료를 입력해주세요.
+            
+        div(class='form-floating mb-3')
+            input(class='form-control', name='RCP_PRICE', id='RCP_PRICE', type='text', value='#{row.RCP_PRICE}')
+            label(class='form-label') 제조비를 입력해주세요.
+            
+        div(class='form-floating mb-3')
+            input(class='form-control', name='DLV_PRICE', id='DLV_PRICE', type='text', value='#{row.DLV_PRICE}')
+            label(class='form-label') 배송비를 입력해주세요.
         
         div(class='form-floating mb-3')
             input(class='form-control', name='STATUS_MSG', type='text', value='#{row.STATUS_MSG}')

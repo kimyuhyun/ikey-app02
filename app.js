@@ -25,6 +25,8 @@ var pushRouter = require('./routes/push');
 var tmpRouter = require('./routes/tmp');
 var articleRouter = require('./routes/article');
 var termsRouter = require('./routes/terms');
+var paymentRouter = require('./routes/payment');
+var certRouter = require('./routes/cert');
 
 
 var app = express();
@@ -74,6 +76,8 @@ app.use('/push', pushRouter);
 app.use('/tmp', tmpRouter);
 app.use('/article', articleRouter);
 app.use('/terms', termsRouter);
+app.use('/payment', paymentRouter);
+app.use('/cert', certRouter);
 
 
 // catch 404 and forward to error handler
@@ -230,11 +234,12 @@ app.io.on('connection', function(socket) {
             'url': 'https://fcm.googleapis.com/fcm/send',
             'headers': {
                 'Content-Type': 'application/json',
-                'Authorization': 'key=AAAA_B0I4P0:APA91bFUZCJ9bOeARbhKonYiKXi4_1j1QbUkG4I03-dCGw83Qytmw5dz5pH6umm3w37CvYlwA-5KEQD9nFs0rzixTeoimBm1JGJFOa-JHXkA248fcdouvStdmCIYje-xYm5oe25--S20'
+                'Authorization': 'key=' + process.env.FCM_SERVER_KEY
             },
             body: JSON.stringify(fields)
         };
         request(options, function (error, response) {
+            console.log(error);
             console.log(response.body);
         });
         //
