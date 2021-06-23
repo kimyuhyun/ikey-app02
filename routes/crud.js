@@ -46,7 +46,7 @@ function checkMiddleWare(req, res, next) {
 
 
 router.post('/list', checkMiddleWare, async function(req, res, next) {
-    var table = req.query.table;
+    var table = req.query.TABLE;
     var board_id = req.query.board_id;
     var level1 = req.query.level1;
     var params;
