@@ -112,19 +112,18 @@ process.on("uncaughtException", function(err) {
 
 /*** Socket.IO 추가 ***/
 // 소켓 서버를 생성한다.
-app.io = require('socket.io')({
+app.io = require('socket.io')(3001, {
     allowEIO3: true,
 });
 
 app.io.on('connection', function(socket) {
-    // console.log('Socket ID : ' + socket.id + ', Connect');
     socket.on('clientRoom', function(data) {
-        console.log('Client Room', data);
+        // console.log('Client Room', data);
         socket.join(data);
 	});
 
     socket.on('clientMessage', async function(data) {
-        console.log('Client Message', data);
+        // console.log('Client Message', data);
 
         //푸시보낼 데이터 정리
         var roomKey = data.ROOM_KEY;
