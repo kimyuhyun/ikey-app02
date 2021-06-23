@@ -96,6 +96,7 @@ router.post('/user_login', checkMiddleWare, async function(req, res, next) {
                 resolve(1);
             } else {
                 console.log(err);
+                res.send(err);
             }
         });
     }).then(function(data) {
