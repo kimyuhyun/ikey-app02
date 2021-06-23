@@ -80,6 +80,8 @@ router.post('/user_login', checkMiddleWare, async function(req, res, next) {
     const filename0 = req.body.FILENAME0;
     var hp = req.body.HP;
 
+
+
     //핸드폰번호 암호화
     const cipher = crypto.createCipher('aes-256-cbc', 'ikey001');
     var result = cipher.update(hp, 'utf8', 'base64');
