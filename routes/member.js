@@ -261,7 +261,7 @@ router.get('/set_alarm/:ID/:IS_ALARM', checkMiddleWare, async function(req, res,
     const isAlarm = req.params.IS_ALARM;
 
     await new Promise(function(resolve, reject) {
-        const sql = `UPDATE MEMBER SET IS_ALARM = ? MBMB_tbl WHERE ID = ?`;
+        const sql = `UPDATE MEMB_tbl SET IS_ALARM = ? WHERE ID = ?`;
         db.query(sql, id);
         resolve();
     }).then(function(data) {
