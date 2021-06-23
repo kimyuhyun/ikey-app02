@@ -115,7 +115,7 @@ router.get('/myinfo/:ID', checkMiddleWare, async function(req, res, next) {
     var id = req.params.ID;
 
     await new Promise(function(resolve, reject) {
-        var sql = `SELECT ID, LEVEL1, NAME1, FILENAME0, HP, WDATE FROM MEMB_tbl WHERE ID = ?`;
+        var sql = `SELECT ID, LEVEL1, NAME1, FILENAME0, HP, IS_ALARM, WDATE FROM MEMB_tbl WHERE ID = ?`;
         db.query(sql, id, function(err, rows, fields) {
             if (!err) {
                 resolve(rows[0]);
@@ -253,6 +253,21 @@ router.post('/update_fcm_token', checkMiddleWare, async function(req, res, next)
         });
     }).then(function(data) {
         res.send(data);
+    });
+});
+
+router.get('/set_alarm/:ID/:IS_ALARM', checkMiddleWare, async function(req, res, next) {
+    const id = req.params.ID;
+    const isAlarm = req.params.IS_ALARM;
+
+    await new Promise(function(resolve, reject) {
+        const sql = `UPDATE MEMBER SET IS_ALARM = ? MBMB_tbl WHERE ID = ?`;
+        db.query(sql, id);
+        resolve();
+    }).then(function(data) {
+        res.send({
+            IS_ALARM: isAlarm
+        });
     });
 });
 
