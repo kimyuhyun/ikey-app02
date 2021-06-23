@@ -20,9 +20,9 @@ router.get('/sms/:HP/:AUTH_NUM', async function(req, res, next) {
 	var resultCode = 404;
 
 	const date = Date.now().toString();
-	const uri = 'ncp:sms:kr:268688320477:ikeyapp002';
-	const secretKey = 'rvuwSH6Xxj0eC2R8LaSy9f4AuQ5EkeVX4A2elP88';
-	const accessKey = 'lM1i2lzesy1uzFvWeq7z';
+	const uri = process.env.uri;
+	const secretKey = process.env.secretKey;
+	const accessKey = process.env.accessKey;
 	const method = 'POST';
 	const space = ' ';
 	const newLine = "\n";
