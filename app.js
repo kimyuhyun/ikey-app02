@@ -85,7 +85,6 @@ app.use(function(req, res, next) {
     // res.status(404).send('페이지가 없습니다.');
     // res.status(500).send('500 에러');
     next(createError(404));
-
 });
 
 // error handler
@@ -106,6 +105,7 @@ app.use(function(err, req, res, next) {
 //catch unCaughtException
 process.on("uncaughtException", function(err) {
     console.error("uncaughtException (Node is alive)", err);
+
 });
 
 
