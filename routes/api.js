@@ -146,11 +146,19 @@ router.post('/create_room', checkMiddleWare, async function(req, res, next) {
         //닥터에게 푸시 보내주기!!!
         var fcmArr = [];
         await new Promise(function(resolve, reject) {
-            var sql = "SELECT FCM FROM MEMB_tbl WHERE ID = ?"
-            db.query(sql, doctorId, function(err, rows, fields) {
-                console.log(rows[0].FCM);
+            var sql = "SELECT FCM, IS_ALARM FROM MEMB_tbl WHERE ID = ?"
+            db.query(sql, id, function(err, rows, fields) {
+                console.log(rows[0]);
                 if (!err) {
-                    resolve(rows[0].FCM);
+                    if (rows[0]) {
+                        if (rows[0].IS_ALARM == 1) {
+                            resolve(rows[0]);
+                        } else {
+                            res.send({ IS_ALARM: 0 });
+                        }
+                    } else {
+                        res.send({ IS_ALARM: 0 });
+                    }
                 } else {
                     console.log(err);
                 }
@@ -292,11 +300,19 @@ router.post('/set_room_state', checkMiddleWare, async function(req, res, next) {
     //상대에게 푸시 보내주기!!!
     var fcmArr = [];
     await new Promise(function(resolve, reject) {
-        var sql = "SELECT FCM FROM MEMB_tbl WHERE ID = ?"
-        db.query(sql, yourId, function(err, rows, fields) {
-            console.log(rows[0].FCM);
+        var sql = "SELECT FCM, IS_ALARM FROM MEMB_tbl WHERE ID = ?"
+        db.query(sql, id, function(err, rows, fields) {
+            console.log(rows[0]);
             if (!err) {
-                resolve(rows[0].FCM);
+                if (rows[0]) {
+                    if (rows[0].IS_ALARM == 1) {
+                        resolve(rows[0]);
+                    } else {
+                        res.send({ IS_ALARM: 0 });
+                    }
+                } else {
+                    res.send({ IS_ALARM: 0 });
+                }
             } else {
                 console.log(err);
             }

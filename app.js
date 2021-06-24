@@ -203,11 +203,19 @@ app.io.on('connection', function(socket) {
         //푸시도 날려준다!!!
         var fcmArr = [];
         await new Promise(function(resolve, reject) {
-            var sql = "SELECT FCM FROM MEMB_tbl WHERE ID = ?"
-            db.query(sql, receiver, function(err, rows, fields) {
-                console.log(rows[0].FCM);
+            var sql = "SELECT FCM, IS_ALARM FROM MEMB_tbl WHERE ID = ?"
+            db.query(sql, id, function(err, rows, fields) {
+                console.log(rows[0]);
                 if (!err) {
-                    resolve(rows[0].FCM);
+                    if (rows[0]) {
+                        if (rows[0].IS_ALARM == 1) {
+                            resolve(rows[0]);
+                        } else {
+                            res.send({ IS_ALARM: 0 });
+                        }
+                    } else {
+                        res.send({ IS_ALARM: 0 });
+                    }
                 } else {
                     console.log(err);
                 }
