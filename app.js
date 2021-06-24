@@ -118,7 +118,7 @@ app.io = require('socket.io')(3001, {
 
 app.io.on('connection', function(socket) {
     socket.on('clientRoom', function(data) {
-        // console.log('Client Room', data);
+        console.log('clientRoom', data);
         socket.join(data);
 	});
 
@@ -138,7 +138,7 @@ app.io.on('connection', function(socket) {
         delete data.RECEIVER;
         //
 
-        console.log('Client Message', data);
+        console.log('clientMessage', data);
         socket.to(data.ROOM_KEY).emit('serverMessage', data);
 
         //lastMsg 업데이트
