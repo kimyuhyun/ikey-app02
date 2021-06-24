@@ -212,10 +212,10 @@ app.io.on('connection', function(socket) {
                         if (rows[0].IS_ALARM == 1) {
                             resolve(rows[0].FCM);
                         } else {
-                            res.send({ IS_ALARM: 0 });
+                            console.log('IS_ALARM: 0');
                         }
                     } else {
-                        res.send({ IS_ALARM: 0 });
+                        console.log('IS_ALARM: 0');
                     }
                 } else {
                     console.log(err);
