@@ -204,7 +204,7 @@ app.io.on('connection', function(socket) {
         var fcmArr = [];
         await new Promise(function(resolve, reject) {
             var sql = "SELECT FCM, IS_ALARM FROM MEMB_tbl WHERE ID = ?"
-            db.query(sql, id, function(err, rows, fields) {
+            db.query(sql, receiver, function(err, rows, fields) {
                 console.log(rows[0]);
                 if (!err) {
                     if (rows[0]) {
