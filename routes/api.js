@@ -152,7 +152,7 @@ router.post('/create_room', checkMiddleWare, async function(req, res, next) {
                 if (!err) {
                     if (rows[0]) {
                         if (rows[0].IS_ALARM == 1) {
-                            resolve(rows[0]);
+                            resolve(rows[0].FCM);
                         } else {
                             res.send({ IS_ALARM: 0 });
                         }
@@ -179,28 +179,33 @@ router.post('/create_room', checkMiddleWare, async function(req, res, next) {
         fields['data']['menu_flag'] = 'home';               //키값은 대문자 안먹음..
         // fields['data']['room_key'] = roomKey;               //키값은 대문자 안먹음..
 
-        var request = require('request');
-        var options = {
-            'method': 'POST',
-            'url': 'https://fcm.googleapis.com/fcm/send',
-            'headers': {
+
+        var config = {
+            method: 'post',
+            url: 'https://fcm.googleapis.com/fcm/send',
+            headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'key=' + process.env.FCM_SERVER_KEY
             },
-            body: JSON.stringify(fields)
+            data: JSON.stringify(fields),
         };
-        request(options, function (error, response) {
+
+        axios(config).then(function (response) {
             //알림내역저장
-            var sql = "INSERT INTO ALARM_tbl SET ID = ?, MESSAGE = ?, WDATE = NOW()";
-            db.query(sql, [doctorId, myName + '님 께서 진료 상담 요청 하였습니다.']);
+            if (response.data.success == 1) {
+                const sql = "INSERT INTO ALARM_tbl SET ID = ?, MESSAGE = ?, WDATE = NOW()";
+                db.query(sql, [doctorId, myName + '님 께서 진료 상담 요청 하였습니다.']);
+            }
             //
 
             res.send({
                 code: 1,
                 msg: '진료 접수 되었습니다.\n접수 현황은 상담 탭에서 확인 할 수 있습니다.'
             });
+        }).catch(function (error) {
+            console.log(error);
+            res.send('err: ' + error);
         });
-        //
     } else {
         var msg = '이미 접수된 진료 내역이 있습니다.\n접수 현황은 상담 탭에서 확인 할 수 있습니다.';
         if (state == 3 || state == 2) {
@@ -306,7 +311,7 @@ router.post('/set_room_state', checkMiddleWare, async function(req, res, next) {
             if (!err) {
                 if (rows[0]) {
                     if (rows[0].IS_ALARM == 1) {
-                        resolve(rows[0]);
+                        resolve(rows[0].FCM);
                     } else {
                         res.send({ IS_ALARM: 0 });
                     }
@@ -342,24 +347,28 @@ router.post('/set_room_state', checkMiddleWare, async function(req, res, next) {
     fields['priority'] = 'high';
     fields['data']['menu_flag'] = '';               //키값은 대문자 안먹음..
 
-    var request = require('request');
-    var options = {
-        'method': 'POST',
-        'url': 'https://fcm.googleapis.com/fcm/send',
-        'headers': {
+    var config = {
+        method: 'post',
+        url: 'https://fcm.googleapis.com/fcm/send',
+        headers: {
             'Content-Type': 'application/json',
             'Authorization': 'key=' + process.env.FCM_SERVER_KEY
         },
-        body: JSON.stringify(fields)
+        data: JSON.stringify(fields),
     };
-    request(options, function (error, response) {
+
+    axios(config).then(function (response) {
+        res.send(response.data);
         //알림내역저장
-        var sql = "INSERT INTO ALARM_tbl SET ID = ?, MESSAGE = ?, WDATE = NOW()";
-        db.query(sql, [yourId, msg]);
+        if (response.data.success == 1) {
+            const sql = "INSERT INTO ALARM_tbl SET ID = ?, MESSAGE = ?, WDATE = NOW()";
+            db.query(sql, [id, msg]);
+        }
         //
-        res.send(response.body);
+    }).catch(function (error) {
+        console.log(error);
+        res.send('err: ' + error);
     });
-    //
 });
 
 

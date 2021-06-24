@@ -9,7 +9,7 @@ var utils = require('../Utils');
 var bcrypt = require('bcrypt');
 var requestIp = require('request-ip');
 var moment = require('moment');
-
+const axios = require('axios');
 
 var upload = multer({
     storage: multer.diskStorage({
@@ -386,7 +386,7 @@ async function sendPush(id, msg) {
             if (!err) {
                 if (rows[0]) {
                     if (rows[0].IS_ALARM == 1) {
-                        resolve(rows[0]);
+                        resolve(rows[0].FCM);
                     } else {
                         res.send({ IS_ALARM: 0 });
                     }
@@ -412,24 +412,28 @@ async function sendPush(id, msg) {
     fields['priority'] = 'high';
     fields['data']['menu_flag'] = 'jinlyo_list';               //키값은 대문자 안먹음..
 
-    var request = require('request');
-    var options = {
-        'method': 'POST',
-        'url': 'https://fcm.googleapis.com/fcm/send',
-        'headers': {
+    var config = {
+        method: 'post',
+        url: 'https://fcm.googleapis.com/fcm/send',
+        headers: {
             'Content-Type': 'application/json',
             'Authorization': 'key=' + process.env.FCM_SERVER_KEY
         },
-        body: JSON.stringify(fields)
+        data: JSON.stringify(fields),
     };
-    request(options, function (error, response) {
-        console.log(response.body);
+
+    axios(config).then(function (response) {
+        res.send(response.data);
         //알림내역저장
-        var sql = "INSERT INTO ALARM_tbl SET ID = ?, MESSAGE = ?, WDATE = NOW()";
-        db.query(sql, [id, msg]);
+        if (response.data.success == 1) {
+            const sql = "INSERT INTO ALARM_tbl SET ID = ?, MESSAGE = ?, WDATE = NOW()";
+            db.query(sql, [id, msg]);
+        }
         //
+    }).catch(function (error) {
+        console.log(error);
+        res.send('err: ' + error);
     });
-    //
 }
 
 function replaceAll(str, searchStr, replaceStr) {

@@ -1,13 +1,14 @@
-var express = require('express');
-var router = express.Router();
-var bodyParser = require('body-parser');
-var fs = require('fs');
-var db = require('../db');
-var multer = require('multer');
-var uniqid = require('uniqid');
-var utils = require('../Utils');
-var requestIp = require('request-ip');
-var moment = require('moment');
+const express = require('express');
+const router = express.Router();
+const bodyParser = require('body-parser');
+const fs = require('fs');
+const db = require('../db');
+const multer = require('multer');
+const uniqid = require('uniqid');
+const utils = require('../Utils');
+const requestIp = require('request-ip');
+const moment = require('moment');
+const axios = require('axios');
 
 // http://52.79.237.255:3000/push/send/naver_33776508/asdasd
 // http://localhost:3000/push/send/naver_33776508/asdasd
@@ -21,11 +22,11 @@ router.get('/send/:id/:msg', async function(req, res, next) {
     await new Promise(function(resolve, reject) {
         var sql = "SELECT FCM, IS_ALARM FROM MEMB_tbl WHERE ID = ?"
         db.query(sql, id, function(err, rows, fields) {
-            console.log(rows[0]);
+            // console.log(rows[0]);
             if (!err) {
                 if (rows[0]) {
                     if (rows[0].IS_ALARM == 1) {
-                        resolve(rows[0]);
+                        resolve(rows[0].FCM);
                     } else {
                         res.send({ IS_ALARM: 0 });
                     }
@@ -40,6 +41,7 @@ router.get('/send/:id/:msg', async function(req, res, next) {
         fcmArr.push(data);
     });
 
+
     var fields = {};
     fields['notification'] = {};
     fields['data'] = {};
@@ -51,28 +53,28 @@ router.get('/send/:id/:msg', async function(req, res, next) {
     fields['priority'] = 'high';
     fields['data']['menu_flag'] = 'jinlyo_list';               //키값은 대문자 안먹음..
 
-    var request = require('request');
-    var options = {
-        'method': 'POST',
-        'url': 'https://fcm.googleapis.com/fcm/send',
-        'headers': {
+    var config = {
+        method: 'post',
+        url: 'https://fcm.googleapis.com/fcm/send',
+        headers: {
             'Content-Type': 'application/json',
             'Authorization': 'key=' + process.env.FCM_SERVER_KEY
         },
-        body: JSON.stringify(fields)
+        data: JSON.stringify(fields),
     };
-    request(options, function (error, response) {
-        res.send({
-            error: error,
-            body: response.body,
-        });
 
+    axios(config).then(function (response) {
+        res.send(response.data);
         //알림내역저장
-        const sql = "INSERT INTO ALARM_tbl SET ID = ?, MESSAGE = ?, WDATE = NOW()";
-        db.query(sql, [id, msg]);
+        if (response.data.success == 1) {
+            const sql = "INSERT INTO ALARM_tbl SET ID = ?, MESSAGE = ?, WDATE = NOW()";
+            db.query(sql, [id, msg]);
+        }
         //
+    }).catch(function (error) {
+        console.log(error);
+        res.send('err: ' + error);
     });
-    //
 });
 
 router.get('/', async function(req, res, next) {
