@@ -57,8 +57,8 @@ router.get('/complete', async function(req, res, next) {
     await new Promise(function(resolve, reject) {
         /* 액세스 토큰(access token) 발급 */
         var data = qs.stringify({
-            'imp_key': '6114613948775846',
-            'imp_secret': 'EhRezORbX1EAc2yEVgot5O9VJMJPi6pXohcX63834NEhQcWLskfy9ouSbeIuk8sJpEGwHOAMCe4tq0eT'
+            'imp_key': process.env.imp_key,
+            'imp_secret': process.env.imp_secret,
         });
 
         var config = {
