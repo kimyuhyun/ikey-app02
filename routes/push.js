@@ -10,8 +10,8 @@ const requestIp = require('request-ip');
 const moment = require('moment');
 const axios = require('axios');
 
-// http://52.79.237.255:3000/push/send/naver_33776508/asdasd
-// http://localhost:3000/push/send/naver_33776508/asdasd
+// http://52.79.237.255/push/send/naver_avoJmSbrvKjIOUFNta1HmWyfqJBWzG6GYXVCdHbVExw/푸시테스트
+// http://localhost:3000/push/send/naver_avoJmSbrvKjIOUFNta1HmWyfqJBWzG6GYXVCdHbVExw/푸시테스트
 
 router.get('/send/:id/:msg', async function(req, res, next) {
     const id = req.params.id;

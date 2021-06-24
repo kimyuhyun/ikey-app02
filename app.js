@@ -123,8 +123,6 @@ app.io.on('connection', function(socket) {
 	});
 
     socket.on('clientMessage', async function(data) {
-        // console.log('Client Message', data);
-
         //푸시보낼 데이터 정리
         var roomKey = data.ROOM_KEY;
         var roomName = data.ROOM_NAME;
@@ -139,6 +137,9 @@ app.io.on('connection', function(socket) {
         var receiver = data.RECEIVER;
         delete data.RECEIVER;
         //
+
+        console.log('Client Message', data);
+        socket.to(data.ROOM_KEY).emit('serverMessage', data);
 
         //lastMsg 업데이트
         var lastMsg = "";
@@ -198,7 +199,7 @@ app.io.on('connection', function(socket) {
         //
 
 
-        socket.to(data.ROOM_KEY).emit('serverMessage', data);
+
 
         //푸시도 날려준다!!!
         var fcmArr = [];
