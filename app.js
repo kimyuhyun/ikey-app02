@@ -114,6 +114,7 @@ process.on("uncaughtException", function(err) {
 // 소켓 서버를 생성한다.
 app.io = require('socket.io')(3001, {
     allowEIO3: true,
+    transports: ['websocket'],
 });
 
 app.io.on('connection', function(socket) {
@@ -121,6 +122,10 @@ app.io.on('connection', function(socket) {
         console.log('clientRoom', data);
         socket.join(data);
 	});
+
+    socket.on('disconnect', function() {
+        console.log('*************disconnected from ', socket.id);
+    });
 
     socket.on('clientMessage', async function(data) {
         //푸시보낼 데이터 정리
@@ -206,7 +211,7 @@ app.io.on('connection', function(socket) {
         await new Promise(function(resolve, reject) {
             var sql = "SELECT FCM, IS_ALARM FROM MEMB_tbl WHERE ID = ?"
             db.query(sql, receiver, function(err, rows, fields) {
-                console.log(rows[0]);
+                // console.log(rows[0]);
                 if (!err) {
                     if (rows[0]) {
                         if (rows[0].IS_ALARM == 1) {
@@ -248,8 +253,8 @@ app.io.on('connection', function(socket) {
             body: JSON.stringify(fields)
         };
         request(options, function (error, response) {
-            console.log(error);
-            console.log(response.body);
+            // console.log(error);
+            // console.log(response.body);
         });
         //
 
