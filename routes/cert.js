@@ -55,7 +55,7 @@ router.get('/sms/:HP/:AUTH_NUM', async function(req, res, next) {
 			type: 'SMS',
             contentType: 'COMM',
 			countryCode: '82',
-			from: '01051818701',
+			from: '0518919170',
 			content: `${process.env.APP_NAME} 인증번호는\n[${user_auth_number}] 입니다.`,
 			messages: [
 				{
