@@ -112,8 +112,9 @@ process.on("uncaughtException", function(err) {
 
 /*** Socket.IO 추가 ***/
 // 소켓 서버를 생성한다.
-app.io = require('socket.io')(9000, {
+app.io = require('socket.io')({
     allowEIO3: true,
+    upgrade: false,
 });
 
 app.io.on('connection', function(socket) {
