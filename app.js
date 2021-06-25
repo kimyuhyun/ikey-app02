@@ -114,7 +114,6 @@ process.on("uncaughtException", function(err) {
 // 소켓 서버를 생성한다.
 app.io = require('socket.io')(3001, {
     allowEIO3: true,
-    transports: ['websocket'],
 });
 
 app.io.on('connection', function(socket) {
