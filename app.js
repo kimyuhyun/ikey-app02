@@ -112,9 +112,10 @@ process.on("uncaughtException", function(err) {
 
 /*** Socket.IO 추가 ***/
 // 소켓 서버를 생성한다.
-app.io = require('socket.io')({
+app.io = require('socket.io')(9000, {
     allowEIO3: true,
     upgrade: false,
+    // transports: ['websocket'],
 });
 
 app.io.on('connection', function(socket) {
@@ -128,6 +129,9 @@ app.io.on('connection', function(socket) {
     });
 
     socket.on('clientMessage', async function(data) {
+        console.log(socket.disconnected);
+        // socket.to(data.ROOM_KEY).emit('disconnectMessage',
+
         //푸시보낼 데이터 정리
         var roomKey = data.ROOM_KEY;
         var roomName = data.ROOM_NAME;
@@ -143,7 +147,7 @@ app.io.on('connection', function(socket) {
         delete data.RECEIVER;
         //
 
-        console.log('clientMessage', data);
+        // console.log('clientMessage', data);
         socket.to(data.ROOM_KEY).emit('serverMessage', data);
 
         //lastMsg 업데이트
