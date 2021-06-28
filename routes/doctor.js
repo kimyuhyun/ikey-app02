@@ -142,6 +142,7 @@ router.get('/list/:ID', checkMiddleWare, async function(req, res, next) {
             A.*,
             (SELECT COUNT(*) FROM DOCTOR_FAVORITE_tbl WHERE DOCTOR_ID = A.ID) as FAV_CNT
             FROM MEMB_tbl as A WHERE ID = ?`;
+            console.log(sql);
         db.query(sql, doctorId, function(err, rows, fields) {
             console.log(rows);
             if (!err) {
@@ -158,7 +159,6 @@ router.get('/list/:ID', checkMiddleWare, async function(req, res, next) {
     delete arr.EMAIL_OK;
     delete arr.EMAIL;
     delete arr.TEL;
-    delete arr.LICENSE_NUM;
     delete arr.HP;
     delete arr.SMS_OK;
     delete arr.POLICY_OK;
@@ -263,7 +263,7 @@ router.get('/get_jinlyi_time/:DOCTOR_ID', async function(req, res, next) {
 
 
     await new Promise(function(resolve, reject) {
-        var sql = `SELECT * FROM JINLYO_TIME_tbl WHERE ID = ?`;
+        var sql = `SELECT * FROM JINLYO_TIME_tbl WHERE ID = ? ORDER BY SORT1 ASC`;
         db.query(sql, doctorId, function(err, rows, fields) {
             // console.log(rows);
             if (!err) {

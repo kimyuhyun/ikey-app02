@@ -214,6 +214,76 @@ router.get('/jinlyobi_payment_ok', checkMiddleWare, async function(req, res, nex
     });
 });
 
+
+
+router.get('/is_set_jinlyo_time/:ID', checkMiddleWare, async function(req, res, next) {
+    const id = req.params.ID;
+    var cnt = 0;
+
+    await new Promise(function(resolve, reject) {
+        const sql = `SELECT COUNT(*) as CNT FROM MEMB_tbl WHERE ID = ?`;
+        db.query(sql, id, function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                resolve(rows[0].CNT);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        cnt = data;
+    });
+
+    if (!cnt) {
+        res.send({
+            code: 0,
+            msg: '잘못된 접속입니다.'
+        });
+        return;
+    }
+
+    await new Promise(function(resolve, reject) {
+        const sql = `SELECT COUNT(*) as CNT FROM JINLYO_TIME_tbl WHERE ID = ?`;
+        db.query(sql, id, function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                resolve(rows[0].CNT);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        res.send({
+            code: 1,
+            cnt: data
+        });
+    });
+});
+
+router.post('/set_jinlyo_time', async function(req, res, next) {
+
+    console.log(req.body);
+    // console.log(yoil);
+
+    // await new Promise(function(resolve, reject) {
+    //     var sql = ``;
+    //     db.query(sql, function(err, rows, fields) {
+    //         console.log(rows);
+    //         if (!err) {
+    //
+    //         } else {
+    //             console.log(err);
+    //         }
+    //     });
+    // }).then(function(data) {
+    //
+    // });
+
+    res.send('jinlyo');
+});
+
+
+
 router.get('/', checkMiddleWare, async function(req, res, next) {
 
     // await new Promise(function(resolve, reject) {
