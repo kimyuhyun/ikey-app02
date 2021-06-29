@@ -20,11 +20,35 @@ router.get('/sms/:HP/:AUTH_NUM', async function(req, res, next) {
 	var user_auth_number = req.params.AUTH_NUM;
 	var resultCode = 404;
 
+    //두번 검사한다!!!!!
     //핸드폰번호 중복체크1
     let cnt = 0;
     await new Promise(function(resolve, reject) {
         const sql = `SELECT COUNT(*) as CNT FROM MEMB_tbl WHERE HP = ?`;
         db.query(sql, utils.crypto(hp), function(err, rows, fields) {
+            console.log(rows[0]);
+            if (!err) {
+                resolve(rows[0].CNT);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        cnt = data;
+    });
+
+    if (cnt > 0) {
+        res.send({
+            code: 0,
+            msg: '중복되는 핸드폰번호가 있습니다.'
+        });
+        return;
+    }
+
+    //핸드폰번호 중복체크2
+    await new Promise(function(resolve, reject) {
+        const sql = `SELECT COUNT(*) as CNT FROM MEMB_tbl WHERE HP = ?`;
+        db.query(sql, utils.crypto(user_phone_number), function(err, rows, fields) {
             console.log(rows[0]);
             if (!err) {
                 resolve(rows[0].CNT);
