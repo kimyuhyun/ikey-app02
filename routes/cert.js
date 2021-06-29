@@ -92,7 +92,9 @@ router.get('/sms/:HP/:AUTH_NUM', async function(req, res, next) {
     };
 
     axios(config).then(function (response) {
-        res.send(response.data);
+        res.send({
+            code: 1,
+        });
     }).catch(function (error) {
         console.log(error);
         res.send('err: ' + signature);
