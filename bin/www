@@ -28,10 +28,10 @@ app.io.attach(server); // 추가됨
 server.listen(port, function() {
 
     //추가됨!
-    // setInterval(function () {
-    //     db.query('SELECT 1');
-    //     console.log('SELECT 1');
-    // }, 5000);
+    setInterval(function () {
+        db.query('SELECT 1');
+        // console.log('SELECT 1');
+    }, 5000);
     //
 
 });
