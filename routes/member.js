@@ -343,10 +343,30 @@ router.post('/leave', checkMiddleWare, async function(req, res, next) {
 });
 
 
+router.get('/set_logout/:ID', async function(req, res, next) {
+    const id = req.params.ID;
 
+    await new Promise(function(resolve, reject) {
+        const sql = `UPDATE MEMB_tbl SET IS_LOGOUT = 1 WHERE ID = ?`;
+        db.query(sql, id, function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                res.send({
+                    code: 1,
+                    msg: '로그아웃 되었습니다.'
+                });
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+
+    });
+});
 
 
 router.get('/', checkMiddleWare, async function(req, res, next) {
+/*
     const cipher = crypto.createCipher('aes-256-cbc', 'ikey001');
     var result = cipher.update('010-5181-8701', 'utf8', 'base64');
     result += cipher.final('base64');
@@ -359,6 +379,7 @@ router.get('/', checkMiddleWare, async function(req, res, next) {
     result2 += decipher.final('utf8'); // 암호화할문장 (여기도 base64대신 utf8)
 
     console.log(result2);
+*/
     // await new Promise(function(resolve, reject) {
     //     var sql = ``;
     //     db.query(sql, function(err, rows, fields) {
