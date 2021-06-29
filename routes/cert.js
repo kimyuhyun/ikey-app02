@@ -97,7 +97,10 @@ router.get('/sms/:HP/:AUTH_NUM', async function(req, res, next) {
         });
     }).catch(function (error) {
         console.log(error);
-        res.send('err: ' + signature);
+        res.send({
+            code: 0,
+            msg: '핸드폰 번호가 올바르지 않습니다.'
+        });
     });
 });
 
