@@ -126,18 +126,14 @@ class Utils {
     async sendPush(res, id, msg, menu_flag) {
         var fcmArr = [];
         await new Promise(function(resolve, reject) {
-            var sql = "SELECT FCM, IS_ALARM FROM MEMB_tbl WHERE ID = ?"
+            var sql = "SELECT FCM FROM MEMB_tbl WHERE ID = ? AND IS_ALARM = 1 AND IS_LOGOUT = 0"
             db.query(sql, id, function(err, rows, fields) {
-                console.log(rows[0]);
+                console.log(rows.length);
                 if (!err) {
-                    if (rows[0]) {
-                        if (rows[0].IS_ALARM == 1) {
-                            resolve(rows[0].FCM);
-                        } else {
-                            res.send({ IS_ALARM: 0 });
-                        }
+                    if (rows.length > 0) {
+                        resolve(rows[0].FCM);
                     } else {
-                        res.send({ IS_ALARM: 0 });
+                        res.send(id + '의 IS_ALARM, IS_LOGOUT 값을 체크해보세요.');
                     }
                 } else {
                     console.log(err);

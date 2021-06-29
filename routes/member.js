@@ -173,7 +173,7 @@ router.get('/is_member/:ID', checkMiddleWare, async function(req, res, next) {
         db.query(sql, id, function(err, rows, fields) {
             if (!err) {
                 if (rows[0].CNT > 0) {
-                    var sql = `UPDATE MEMB_tbl SET LDATE = NOW() WHERE ID = ?`;
+                    var sql = `UPDATE MEMB_tbl SET LDATE = NOW() AND IS_LOGOUT = 0 WHERE ID = ?`;
                     db.query(sql, id);
                 }
                 resolve(rows[0]);
