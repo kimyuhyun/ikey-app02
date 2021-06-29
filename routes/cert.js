@@ -15,9 +15,35 @@ var SHA256 = require('crypto-js/sha256');
 var Base64 = require('crypto-js/enc-base64');
 
 router.get('/sms/:HP/:AUTH_NUM', async function(req, res, next) {
+    const hp = req.params.HP;
     var user_phone_number = req.params.HP.replace(/-/gi, "");
 	var user_auth_number = req.params.AUTH_NUM;
 	var resultCode = 404;
+
+    //핸드폰번호 중복체크1
+    let cnt = 0;
+    await new Promise(function(resolve, reject) {
+        const sql = `SELECT COUNT(*) as CNT FROM MEMB_tbl WHERE HP = ?`;
+        db.query(sql, utils.crypto(hp), function(err, rows, fields) {
+            console.log(rows[0]);
+            if (!err) {
+                resolve(rows[0].CNT);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        cnt = data;
+    });
+
+    if (cnt > 0) {
+        res.send({
+            code: 0,
+            msg: '중복되는 핸드폰번호가 있습니다.'
+        });
+        return;
+    }
+
 
 	const date = Date.now().toString();
 	const uri = process.env.uri;
@@ -76,7 +102,7 @@ router.get('/sms/:HP/:AUTH_NUM', async function(req, res, next) {
 router.get('/', async function(req, res, next) {
 
     // await new Promise(function(resolve, reject) {
-    //     var sql = ``;
+    //     const sql = ``;
     //     db.query(sql, function(err, rows, fields) {
     //         console.log(rows);
     //         if (!err) {
