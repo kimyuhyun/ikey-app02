@@ -83,10 +83,7 @@ router.post('/user_login', checkMiddleWare, async function(req, res, next) {
 
 
     //핸드폰번호 암호화
-    const cipher = crypto.createCipher('aes-256-cbc', 'ikey001');
-    var result = cipher.update(hp, 'utf8', 'base64');
-    result += cipher.final('base64');
-    hp = result;
+    hp = utils.crypto(hp);
     //
 
 
@@ -128,16 +125,9 @@ router.get('/myinfo/:ID', checkMiddleWare, async function(req, res, next) {
 
         if (data.HP != '') {
             //핸드폰번호 복호화
-            var hp = data.HP;
-            const decipher = crypto.createDecipher('aes-256-cbc', 'ikey001');
-            let result = decipher.update(hp, 'base64', 'utf8');
-            result += decipher.final('utf8');
-            data.HP = result;
+            data.HP = utils.decrypto(data.HP);
             //
         }
-
-
-
         res.send(data);
     });
 });

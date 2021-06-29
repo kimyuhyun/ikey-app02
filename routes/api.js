@@ -214,7 +214,8 @@ router.get('/get_room_info/:ROOM_KEY', checkMiddleWare, async function(req, res,
             SELECT
             A.*,
             (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_NAME,
-            (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.USER_ID) as USER_NAME
+            (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.USER_ID) as USER_NAME,
+            (SELECT HP FROM MEMB_tbl WHERE ID = A.USER_ID) as USER_HP
             FROM ROOM_tbl as A
             WHERE A.ROOM_KEY = ?`;
         db.query(sql, roomKey, function(err, rows, fields) {
@@ -226,6 +227,7 @@ router.get('/get_room_info/:ROOM_KEY', checkMiddleWare, async function(req, res,
             }
         });
     }).then(function(data) {
+        data.USER_HP = utils.decrypto(data.USER_HP);
         res.send(data);
     });
 });

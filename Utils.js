@@ -3,6 +3,7 @@ const fs = require('fs');
 const db = require('./db');
 const requestIp = require('request-ip');
 const axios = require('axios');
+const crypto = require('crypto');
 
 class Utils {
     setSaveMenu(req) {
@@ -176,6 +177,22 @@ class Utils {
             console.log(error);
             res.send('err: ' + error);
         });
+    }
+
+    crypto(text) {
+        const cipher = crypto.createCipher('aes-256-cbc', 'ikey001');
+        var result = cipher.update(text, 'utf8', 'base64');
+        result += cipher.final('base64');
+
+        return result;
+    }
+
+    decrypto(text) {
+        const decipher = crypto.createDecipher('aes-256-cbc', 'ikey001');
+        let result2 = decipher.update(text, 'base64', 'utf8'); // 암호화할문 (base64, utf8이 위의 cipher과 반대 순서입니다.)
+        result2 += decipher.final('utf8'); // 암호화할문장 (여기도 base64대신 utf8)
+
+        return result2;
     }
 }
 
