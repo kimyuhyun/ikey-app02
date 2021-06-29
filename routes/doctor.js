@@ -1,14 +1,14 @@
-var express = require('express');
-var router = express.Router();
-var bodyParser = require('body-parser');
-var fs = require('fs');
-var db = require('../db');
-var multer = require('multer');
-var uniqid = require('uniqid');
-var utils = require('../Utils');
-var requestIp = require('request-ip');
+const express = require('express');
+const router = express.Router();
+const bodyParser = require('body-parser');
+const fs = require('fs');
+const db = require('../db');
+const multer = require('multer');
+const uniqid = require('uniqid');
+const utils = require('../Utils');
+const requestIp = require('request-ip');
 const moment = require('moment');
-
+const holidayKR = require('holiday-kr');
 
 var upload = multer({
     storage: multer.diskStorage({
@@ -292,14 +292,25 @@ router.get('/get_jinlyi_time/:DOCTOR_ID', async function(req, res, next) {
 });
 
 async function getJinlyoGbn(doctorId) {
-    const yoil = moment().format('ddd').toUpperCase();
+    let yoil = moment().format('ddd').toUpperCase();
     const time = moment().format('HH:mm');
+    const y = moment().format('YYYY');
+    const m = moment().format('MM');
+    const d = moment().format('DD');
 
-    var gbn = '진료종료';
+    let gbn = '진료종료';
+
+    //우선 공휴일인지 체크 한다!!!
+    // const isHoliday = holidayKR.isSolarHoliday(y, 08, 15);
+    const isHoliday = holidayKR.isSolarHoliday(y, m, d);
+    if (isHoliday) {
+        yoil = 'HOL';
+    }
+    //
 
     //진료시간을 체크 한다!!
     await new Promise(function(resolve, reject) {
-        var sql = `SELECT COUNT(*) as CNT FROM JINLYO_TIME_tbl WHERE ID = ? AND YOIL = ? AND ? BETWEEN S_TM AND E_TM`;
+        const sql = `SELECT COUNT(*) as CNT FROM JINLYO_TIME_tbl WHERE ID = ? AND YOIL = ? AND ? BETWEEN S_TM AND E_TM`;
         db.query(sql, [doctorId, yoil, time], function(err, rows, fields) {
             // console.log(rows);
             if (!err) {
@@ -338,6 +349,12 @@ async function getJinlyoGbn(doctorId) {
 
 
 router.get('/', checkMiddleWare, async function(req, res, next) {
+    var gbn = '';
+    await new Promise(function(resolve, reject) {
+        resolve(getJinlyoGbn('test@test.com'));
+    }).then(function(data) {
+        gbn = data;
+    });
 
     // await new Promise(function(resolve, reject) {
     //     var sql = ``;
@@ -353,7 +370,7 @@ router.get('/', checkMiddleWare, async function(req, res, next) {
     //
     // });
 
-    res.send('doctor');
+    res.send(gbn);
 });
 
 module.exports = router;

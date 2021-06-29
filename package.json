@@ -53,6 +53,7 @@
         "forwarded": "^0.1.2",
         "fresh": "^0.5.2",
         "graceful-readlink": "^1.0.1",
+        "holiday-kr": "^0.1.5",
         "http-errors": "^1.6.3",
         "iconv-lite": "^0.4.23",
         "inherits": "^2.0.3",
