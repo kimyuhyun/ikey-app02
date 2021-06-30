@@ -1,13 +1,12 @@
-var express = require('express');
-var router = express.Router();
-var bodyParser = require('body-parser');
-var fs = require('fs');
-var db = require('../db');
-var multer = require('multer');
-var uniqid = require('uniqid');
-var utils = require('../Utils');
-var requestIp = require('request-ip');
-var moment = require('moment');
+const express = require('express');
+const router = express.Router();
+const bodyParser = require('body-parser');
+const fs = require('fs');
+const db = require('../db');
+const multer = require('multer');
+const uniqid = require('uniqid');
+const utils = require('../Utils');
+const moment = require('moment');
 
 
 var upload = multer({
@@ -36,10 +35,11 @@ var upload = multer({
 });
 
 async function checkMiddleWare(req, res, next) {
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     var rows;
     await new Promise(function(resolve, reject) {
         var sql = `SELECT VISIT FROM ANALYZER_tbl WHERE IP = ? ORDER BY IDX DESC LIMIT 0, 1`;
-        db.query(sql, req.sessionID, function(err, rows, fields) {
+        db.query(sql, ip, function(err, rows, fields) {
             if (!err) {
                 resolve(rows);
             }
@@ -52,11 +52,11 @@ async function checkMiddleWare(req, res, next) {
         var sql = `INSERT INTO ANALYZER_tbl SET IP = ?, AGENT = ?, VISIT = ?, WDATE = NOW()`;
         if (rows.length > 0) {
             var cnt = rows[0].VISIT + 1;
-            db.query(sql, [req.sessionID, req.headers['user-agent'], cnt], function(err, rows, fields) {
+            db.query(sql, [ip, req.headers['user-agent'], cnt], function(err, rows, fields) {
                 resolve(cnt);
             });
         } else {
-            db.query(sql, [req.sessionID, req.headers['user-agent'], 1], function(err, rows, fields) {
+            db.query(sql, [ip, req.headers['user-agent'], 1], function(err, rows, fields) {
                 resolve(1);
             });
         }
@@ -66,7 +66,7 @@ async function checkMiddleWare(req, res, next) {
 
     //현재 접속자 파일 생성
     var memo = new Date().getTime() + "|S|" + req.baseUrl + req.path;
-    fs.writeFile('./liveuser/'+req.sessionID, memo, function(err) {
+    fs.writeFile('./liveuser/'+ip, memo, function(err) {
         console.log(memo);
     });
     //

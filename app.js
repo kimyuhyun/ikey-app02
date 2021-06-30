@@ -6,7 +6,6 @@ var session = require('express-session');
 var MySQLStore = require('express-mysql-session')(session);
 var path = require('path');
 var cookieParser = require('cookie-parser');
-var requestIp = require('request-ip');
 var logger = require('morgan');
 var db = require('./db');
 var request = require('request');
@@ -31,8 +30,6 @@ var certRouter = require('./routes/cert');
 
 var app = express();
 
-
-app.use(requestIp.mw());
 app.use(session({
     key: 'sid',
     secret: 'secret',
