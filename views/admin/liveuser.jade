@@ -1,8 +1,7 @@
 extends layout
 
 block content
-    div(class='card shadow my-4')
-        div(class='card-body', id='liveuser')
+    div(class='my-4', id='liveuser')
             
 
 
@@ -21,10 +20,10 @@ block content
             axios.post('/analyzer/liveuser').then(function(res) {
                 console.log(res.data);
                 
-                var html = "========================================<br>";
+                var html = "";
                 html += res.data.currentTime + ", <font color='red'>" + res.data.list.length + "</font>명 접속<br>";
                 html += "(4분동안 액션이 없으면 카운팅에서 제외 됩니다.)<br>";
-                html += "========================================<br><br>";
+                html += "<hr>";
                                 
                 for (i in res.data.list) {
                     var obj = res.data.list[i];
