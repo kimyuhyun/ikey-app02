@@ -11,8 +11,9 @@ const crypto = require('crypto');
 
 router.get('/', async function(req, res, next) {
     const { user_id, amount, jinlyobi_idx } = req.query;
-    var hp = '';
-    var user_name = '';
+    let hp = '';
+    let user_name = '';
+    let row = {};
 
     await new Promise(function(resolve, reject) {
         var sql = `SELECT NAME1, HP FROM MEMB_tbl WHERE ID = ?`;
@@ -25,18 +26,17 @@ router.get('/', async function(req, res, next) {
             }
         });
     }).then(function(data) {
-        user_name = data.NAME1;
+        if (data) {
+            user_name = data.NAME1;
 
-        if (data.HP != '') {
-            hp = data.HP;
-            const decipher = crypto.createDecipher('aes-256-cbc', 'ikey001');
-            let result = decipher.update(hp, 'base64', 'utf8');
-            result += decipher.final('utf8');
-            hp = result;
+            if (data.HP != '') {
+                hp = utils.decrypto(data.HP);
+            }
+        } else {
+            user_name = '임시테스터';
+            hp = '010-5181-8701';
         }
     });
-
-    console.log(amount);
 
     res.render('./payment/payment.html', {
         amount: amount,

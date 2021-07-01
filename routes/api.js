@@ -192,6 +192,20 @@ router.get('/room_list/:ID/:LEVEL1', checkMiddleWare, async function(req, res, n
                     AND STATE IN (0,1) `;
         }
 
+        //테스트를 위한 임시!!
+        if (level1 == 10) {
+            sql = `SELECT
+                    A.*,
+                    (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as ROOM_NAME,
+                    (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as THUMB,
+                    (SELECT COUNT(*) FROM TALK_NO_READ_tbl WHERE ID = A.USER_ID AND ROOM_KEY = A.ROOM_KEY) as NO_READ_CNT
+                    FROM ROOM_tbl as A
+                    WHERE A.USER_ID = ?
+                    AND STATE IN (0,1) `;
+        }
+
+
+
         db.query(sql, id, function(err, rows, fields) {
             console.log(rows);
             if (!err) {
@@ -207,10 +221,11 @@ router.get('/room_list/:ID/:LEVEL1', checkMiddleWare, async function(req, res, n
 
 
 router.get('/get_room_info/:ROOM_KEY', checkMiddleWare, async function(req, res, next) {
-    var roomKey = req.params.ROOM_KEY;
+    const roomKey = req.params.ROOM_KEY;
+    let row = {};
 
     await new Promise(function(resolve, reject) {
-        var sql = `
+        const sql = `
             SELECT
             A.*,
             (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_NAME,
@@ -227,9 +242,14 @@ router.get('/get_room_info/:ROOM_KEY', checkMiddleWare, async function(req, res,
             }
         });
     }).then(function(data) {
-        data.USER_HP = utils.decrypto(data.USER_HP);
-        res.send(data);
+        if (data.USER_HP) {
+            data.USER_HP = utils.decrypto(data.USER_HP);
+        }
+
+        row = data;
     });
+
+    res.send(row);
 });
 
 router.post('/set_room_state', checkMiddleWare, async function(req, res, next) {
