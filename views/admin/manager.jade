@@ -89,7 +89,7 @@ block content
                             
                             console.log(form.record);
                             $(".file_fields").html('');
-                            for (var i = 0; i <= 0; i++) {
+                            for (var i = 0; i < fileLimitCount; i++) {
         						eval("var fileLink = form.record.FILENAME"+i);
         						if (fileLink != '') {
                                     var html = createHtml(fileLink);
@@ -199,7 +199,7 @@ block content
         function formClear() {
             console.log("formClear");
             w2ui.form.clear();
-        	for (var i = 0; i <= 0; i++) {
+        	for (var i = 0; i < fileLimitCount; i++) {
                 eval("w2ui.form.record.FILENAME"+i+"='';");
         	}
             $(".file_box").remove();
@@ -224,8 +224,8 @@ block content
             
             var size = $('.file_box').length + e.dataTransfer.files.length;
             
-            if (size > 10) {
-                w2alert('파일은 10개 까지 등록 가능합니다.');
+            if (size > fileLimitCount) {
+                w2alert('파일은 ' + fileLimitCount + '개 까지 등록 가능합니다.');
                 $(".file_fields").removeClass("bg-dark");
                 return;
             }
@@ -254,7 +254,7 @@ block content
             $(".file_box").eq(i).remove();
                         
             //초기화
-            for (var i = 0; i <= 0; i++) {
+            for (var i = 0; i < fileLimitCount; i++) {
                 eval("w2ui.form.record.FILENAME"+i+"='';");
         	}
             

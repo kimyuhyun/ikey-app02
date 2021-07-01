@@ -39,6 +39,7 @@ block content
 
     //- 들여쓰기 중요함
     script.
+        let fileLimitCount = 1;
         var table = 'MEMB_tbl';
         var config = {
             form: {
@@ -105,10 +106,8 @@ block content
         function formClear() {
             console.log("formClear");
             w2ui.form.clear();
-        	for (var i = 0; i <= 0; i++) {
-                eval("w2ui.form.record.FILENAME"+i+"='';");
-        	}
-            $(".file_box").remove();
+        	w2ui.form.record.FILENAME0 = '';
+        	$(".file_box").remove();
         	w2ui.form.refresh();
             w2ui.form.resize();
         }
@@ -130,8 +129,8 @@ block content
             
             var size = $('.file_box').length + e.dataTransfer.files.length;
             
-            if (size > 1) {
-                w2alert('파일은 1개 까지 등록 가능합니다.');
+            if (size > fileLimitCount) {
+                w2alert('파일은 ' + fileLimitCount + '개 까지 등록 가능합니다.');
                 $(".file_fields").removeClass("bg-dark");
                 return;
             }
