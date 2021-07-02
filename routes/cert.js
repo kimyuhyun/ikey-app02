@@ -56,7 +56,6 @@ router.get('/sms/:HP/:AUTH_NUM', async function(req, res, next) {
         return;
     }
 
-    return;
 
 	const date = Date.now().toString();
 	const uri = process.env.uri;
