@@ -136,6 +136,33 @@ router.get('/hlist', async function(req, res, next) {
 });
 
 
+router.get('/get_hospital', async function(req, res, next) {
+    const q = '%' + req.query.q + '%';
+
+    await new Promise(function(resolve, reject) {
+        const sql = `
+            SELECT
+            IDX,
+            NAME1,
+            ADDR,
+            GRADE,
+            TEL
+            FROM HOSPITAL_tbl
+            WHERE (NAME1 LIKE ? OR ADDR LIKE ?)
+            ORDER BY NAME1 ASC `;
+        db.query(sql, [q, q], function(err, rows, fields) {
+            if (!err) {
+                resolve(rows);
+            } else {
+                res.send(err);
+            }
+        });
+    }).then(function(data){
+        res.send(data);
+    });
+});
+
+
 router.get('/hlist/:IDX', async function(req, res, next) {
     var idx = req.params.IDX;
     await new Promise(function(resolve, reject) {

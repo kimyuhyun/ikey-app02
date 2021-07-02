@@ -80,6 +80,7 @@ block content
                             form.recid  = sel[0];
                             formClear();
                             form.record = $.extend(true, {}, grid.get(sel[0]));
+                            grid.selectNone();
                             
                             //수정시 - 아이디는 수정못하게!!! 패스워드는 필수값 아니게!!
                             form.record.PASS1 = '';
