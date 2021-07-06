@@ -10,6 +10,7 @@ var requestIp = require('request-ip');
 var moment = require('moment');
 
 
+
 var upload = multer({
     storage: multer.diskStorage({
         destination: function(req, file, cb) {
@@ -107,18 +108,6 @@ router.get('/jinlyo_detail/:IDX', checkMiddleWare, async function(req, res, next
     var idx = req.params.IDX;
 
     await new Promise(function(resolve, reject) {
-        // var sql = `
-        //     SELECT
-        //     A.*,
-        //     (SELECT ID FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_ID,
-        //     (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_NAME,
-        //     (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_THUMB,
-        //     (SELECT SOGE FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_SOGE,
-        //     (SELECT HOSPITAL FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_HOSPITAL,
-        //     (SELECT CATEGORYS FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DT_CATEGORYS
-        //     FROM JINLYO_tbl as A WHERE A.IDX = ?
-        // `;
-
         var sql = ` SELECT * FROM JINLYO_tbl as A WHERE A.IDX = ? `;
 
         db.query(sql, idx, function(err, rows, fields) {

@@ -26,6 +26,7 @@ var articleRouter = require('./routes/article');
 var termsRouter = require('./routes/terms');
 var paymentRouter = require('./routes/payment');
 var certRouter = require('./routes/cert');
+var calendarRouter = require('./routes/calendar');
 
 
 var app = express();
@@ -75,6 +76,8 @@ app.use('/article', articleRouter);
 app.use('/terms', termsRouter);
 app.use('/payment', paymentRouter);
 app.use('/cert', certRouter);
+app.use('/calendar', calendarRouter);
+
 
 
 // catch 404 and forward to error handler
