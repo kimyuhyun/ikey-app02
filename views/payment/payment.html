@@ -21,11 +21,31 @@ $(document).ready(function() {
     payment();
 });
 
-
+// html5_inicis(이니시스웹표준)
+// inicis(이니시스ActiveX결제창)
+// kcp(NHN KCP)
+// kcp_billing(NHN KCP 정기결제)
+// uplus(LGU+)
+// nice(나이스페이)
+// jtnet(JTNet)
+// kakaopay(카카오페이)
+// danal(다날휴대폰소액결제)
+// danal_tpay(다날일반결제)
+// mobilians(모빌리언스 휴대폰소액결제)
+// settle(세틀뱅크)
+// syrup(시럽페이)
+// payco(페이코)
+// paypal(페이팔)
+// eximbay(엑심베이)
+// naverco(주문형-네이버페이)
+// naverpay(결제형-네이버페이)
+// smilepay(스마일페이)
+// kicc
 
 function payment() {
+    console.log('payment');
     IMP.request_pay({
-        pg : 'html5_inicis',
+        pg : 'nice',
         pay_method : 'card',
         merchant_uid : 'merchant_' + new Date().getTime(),
         name : '<%=user_name%>님, 처방전 및 기타 결제',
@@ -35,7 +55,7 @@ function payment() {
         buyer_tel : '<%=hp%>',
         buyer_addr : '',
         buyer_postcode : '',
-        m_redirect_url : '<%=process.env.HOST_NAME%>/payment/complete?jinlyobi_idx=<%=jinlyobi_idx%>&user_id=<%=user_id%>'
+        m_redirect_url : '<%=process.env.HOST_NAME%>/payment/complete?jinlyobi_idx=<%=jinlyobi_idx%>&user_id=<%=user_id%>',
     });
 }
 

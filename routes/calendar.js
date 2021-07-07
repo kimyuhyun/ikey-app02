@@ -51,22 +51,118 @@ async function checkMiddleWare(req, res, next) {
 }
 
 
+router.get('/get_resv/:doctor_id/:start/:end', async function(req, res, next) {
+    const { doctor_id, start, end } = req.params;
+
+    const date1 = moment(start, "YYYY-MM-DD");
+    const date2 = moment(end, "YYYY-MM-DD");
+    const diff = date2.diff(date1, 'days');
+
+    var arr = [];
+    var startDate = '';
+
+    const today = moment().format("YYYY-MM-DD");
+    var isFirst = true;
+
+
+    for (var i=0;i<=diff;i++) {
+        var obj = {};
+        var date = moment(start).add(i, 'days').format("YYYY-MM-DD");
+
+        var isHoliday = holidayKR.isSolarHoliday(date.split('-')[0], date.split('-')[1], date.split('-')[2]);
+        var yoil = moment(date).format('ddd').toUpperCase();
+        if (isHoliday && yoil != 'SUN') {
+            yoil = 'HOL';
+        }
+
+        //요일별 진료시간 가져오기!
+        await new Promise(function(resolve, reject) {
+            const sql = `SELECT YOIL, S_TM, E_TM, H_S_TM, H_E_TM FROM JINLYO_TIME_tbl WHERE ID = ? AND YOIL = ? `;
+            db.query(sql, [doctor_id, yoil], function(err, rows, fields) {
+                if (!err) {
+                    resolve(rows[0]);
+                } else {
+                    console.log(err);
+                }
+            });
+        }).then(function(data) {
+            obj.DATE = date;
+            obj.YOIL = yoil;
+
+            if (data.S_TM == '00:00' && data.E_TM == '00:00') {
+                obj.IS_RESV = false;
+            } else {
+                obj.IS_RESV = true;
+            }
+        });
+        //
+
+        // 오늘 예약 못하게 막기
+        if (moment(today).isSame(date)) {
+            obj.IS_RESV = false;
+        }
+        //
+
+        //이전날 예약 못하게 막기
+        if (!moment(today).isBefore(date)) {
+            obj.IS_RESV = false;
+        }
+
+
+        // 예약자수 가져오기!
+        if (obj.IS_RESV) {
+            //예약 가능한 첫번째 날짜 세팅
+            if (isFirst) {
+                startDate = obj.DATE;
+                isFirst = false;
+            }
+            //
+            await new Promise(function(resolve, reject) {
+                const sql = `SELECT COUNT(*) as CNT FROM JINLYOBI_tbl WHERE DOCTOR_ID = ? AND DATE1 = ? `;
+                db.query(sql, [doctor_id, date], function(err, rows, fields) {
+                    if (!err) {
+                        resolve(rows[0]);
+                    } else {
+                        console.log(err);
+                    }
+                });
+            }).then(function(data) {
+                obj.RESV_CNT = data.CNT;
+            });
+        } else {
+            obj.RESV_CNT = 0;
+        }
+
+
+        arr.push(obj);
+    }
+
+    res.send({
+        list: arr,
+        start_date: startDate,
+    });
+});
+
+
 router.get('/:DOCTOR_ID/:GAP', async function(req, res, next) {
     const doctorId = req.params.DOCTOR_ID;
     const gap = req.params.GAP;
 
     var start = moment().add(gap, 'month').format("YYYY-MM-01");
     var end = moment().add(gap, 'month').format("YYYY-MM-") + moment().add(gap, 'month').daysInMonth();
-    console.log(start, end);
 
     const date1 = moment(start, "YYYY-MM-DD");
     const date2 = moment(end, "YYYY-MM-DD");
     const diff = date2.diff(date1, 'days');
 
-    console.log(diff);
 
     var arr = [];
     var obj = {};
+    var startDate = '';
+
+    const today = moment().format("YYYY-MM-DD");
+    var isFirst = true;
+
 
     for (var i=0;i<=diff;i++) {
         var date = moment(start).add(i, 'days').format("YYYY-MM-DD");
@@ -76,7 +172,6 @@ router.get('/:DOCTOR_ID/:GAP', async function(req, res, next) {
         if (isHoliday && yoil != 'SUN') {
             yoil = 'HOL';
         }
-        console.log(date, yoil);
 
         //요일별 진료시간 가져오기!
         await new Promise(function(resolve, reject) {
@@ -102,24 +197,50 @@ router.get('/:DOCTOR_ID/:GAP', async function(req, res, next) {
         });
         //
 
-        //예약자수 가져오기!
-        await new Promise(function(resolve, reject) {
-            const sql = `SELECT COUNT(*) as CNT FROM JINLYOBI_tbl WHERE DOCTOR_ID = ? AND DATE1 = ? `;
-            db.query(sql, [doctorId, date], function(err, rows, fields) {
-                if (!err) {
-                    resolve(rows[0]);
-                } else {
-                    console.log(err);
-                }
-            });
-        }).then(function(data) {
-            obj.RESV_CNT = data.CNT;
-        });
+        //오늘 예약 못하게 막기
+        if (moment(today).isSame(date)) {
+            obj.IS_RESV = false;
+        }
         //
 
+        //이전날 예약 못하게 막기
+        if (!moment(today).isBefore(date)) {
+            console.log(today, date);
+            obj.IS_RESV = false;
+        }
+        //
+
+        //예약자수 가져오기!
+        if (obj.IS_RESV) {
+            //예약 가능한 첫번째 날짜 세팅
+            if (isFirst) {
+                startDate = obj.DATE;
+                isFirst = false;
+            }
+            //
+            await new Promise(function(resolve, reject) {
+                const sql = `SELECT COUNT(*) as CNT FROM JINLYOBI_tbl WHERE DOCTOR_ID = ? AND DATE1 = ? `;
+                db.query(sql, [doctorId, date], function(err, rows, fields) {
+                    if (!err) {
+                        resolve(rows[0]);
+                    } else {
+                        console.log(err);
+                    }
+                });
+            }).then(function(data) {
+                obj.RESV_CNT = data.CNT;
+            });
+        } else {
+            obj.RESV_CNT = 0;
+        }
+        //
         arr.push(obj);
     }
-    res.send(arr);
+
+    res.send({
+        list: arr,
+        start_date: startDate,
+    });
 });
 
 router.get('/resv_detail/:DOCTOR_ID/:DATE', async function(req, res, next) {
@@ -150,6 +271,24 @@ router.get('/resv_detail/:DOCTOR_ID/:DATE', async function(req, res, next) {
         obj = data;
     });
 
+    //해당일 예약시간 가져오기
+    var timeArr = [];
+    await new Promise(function(resolve, reject) {
+        const sql = `SELECT TIME1 FROM JINLYOBI_tbl WHERE DOCTOR_ID = ? AND DATE1 = ?`;
+        db.query(sql, [doctorId, date], function(err, rows, fields) {
+            if (!err) {
+                resolve(rows);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        for (v of data) {
+            timeArr.push(v.TIME1);
+        }
+    });
+    //
+
     //몇분마다 예약잡을건지!!!!
     const min = 5;
 
@@ -167,21 +306,26 @@ router.get('/resv_detail/:DOCTOR_ID/:DATE', async function(req, res, next) {
         var isBetween = moment(date + ' ' + v).isBetween(date + ' ' + hstm, date + ' ' + obj.H_E_TM);
         if (!isBetween) {
             //예약됬는지 체크!
-            await new Promise(function(resolve, reject) {
-                const sql = `SELECT COUNT(*) as CNT FROM JINLYOBI_tbl WHERE DOCTOR_ID = ? AND DATE1 = ? AND TIME1 = ?`;
-                db.query(sql, [doctorId, date, v], function(err, rows, fields) {
-                    if (!err) {
-                        resolve(rows[0].CNT);
-                    } else {
-                        console.log(err);
-                    }
-                });
-            }).then(function(data) {
-                arr.push({
-                    TIME: v,
-                    IS_RESV: data,
-                });
+            arr.push({
+                TIME: v,
+                IS_RESV: timeArr.includes(v),
             });
+
+            // await new Promise(function(resolve, reject) {
+            //     const sql = `SELECT COUNT(*) as CNT FROM JINLYOBI_tbl WHERE DOCTOR_ID = ? AND DATE1 = ? AND TIME1 = ?`;
+            //     db.query(sql, [doctorId, date, v], function(err, rows, fields) {
+            //         if (!err) {
+            //             resolve(rows[0].CNT);
+            //         } else {
+            //             console.log(err);
+            //         }
+            //     });
+            // }).then(function(data) {
+            //     arr.push({
+            //         TIME: v,
+            //         IS_RESV: data,
+            //     });
+            // });
             //
         }
         //

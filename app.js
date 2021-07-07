@@ -1,35 +1,36 @@
 process.env.NODE_ENV = (process.env.NODE_ENV && (process.env.NODE_ENV).trim().toLowerCase() == 'production') ? 'production' : 'development';
 
-var createError = require('http-errors');
-var express = require('express');
-var session = require('express-session');
-var MySQLStore = require('express-mysql-session')(session);
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-var db = require('./db');
-var request = require('request');
+const createError = require('http-errors');
+const express = require('express');
+const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+const db = require('./db');
+const request = require('request');
 
-var indexRouter = require('./routes/index');
-var adminRouter = require('./routes/admin');
-var crudRouter = require('./routes/crud');
-var analyzerRouter = require('./routes/analyzer');
-var apiRouter = require('./routes/api');
-var pharmacyRouter = require('./routes/pharmacy');
-var doctorRouter = require('./routes/doctor');
-var memberRouter = require('./routes/member');
-var jinlyoRouter = require('./routes/jinlyo');
-var rcpRouter = require('./routes/rcp');
-var pushRouter = require('./routes/push');
-var tmpRouter = require('./routes/tmp');
-var articleRouter = require('./routes/article');
-var termsRouter = require('./routes/terms');
-var paymentRouter = require('./routes/payment');
-var certRouter = require('./routes/cert');
-var calendarRouter = require('./routes/calendar');
+const indexRouter = require('./routes/index');
+const adminRouter = require('./routes/admin');
+const crudRouter = require('./routes/crud');
+const analyzerRouter = require('./routes/analyzer');
+const apiRouter = require('./routes/api');
+const pharmacyRouter = require('./routes/pharmacy');
+const doctorRouter = require('./routes/doctor');
+const memberRouter = require('./routes/member');
+const jinlyoRouter = require('./routes/jinlyo');
+const rcpRouter = require('./routes/rcp');
+const pushRouter = require('./routes/push');
+const tmpRouter = require('./routes/tmp');
+const articleRouter = require('./routes/article');
+const termsRouter = require('./routes/terms');
+const paymentRouter = require('./routes/payment');
+const certRouter = require('./routes/cert');
+const calendarRouter = require('./routes/calendar');
+const resvRouter = require('./routes/resv');
 
 
-var app = express();
+const app = express();
 
 app.use(session({
     key: 'sid',
@@ -77,6 +78,7 @@ app.use('/terms', termsRouter);
 app.use('/payment', paymentRouter);
 app.use('/cert', certRouter);
 app.use('/calendar', calendarRouter);
+app.use('/resv', resvRouter);
 
 
 
@@ -133,17 +135,17 @@ app.io.on('connection', function(socket) {
         // socket.to(data.ROOM_KEY).emit('disconnectMessage',
 
         //푸시보낼 데이터 정리
-        var roomKey = data.ROOM_KEY;
-        var roomName = data.ROOM_NAME;
+        const roomKey = data.ROOM_KEY;
+        const roomName = data.ROOM_NAME;
         delete data.ROOM_NAME;
 
-        var doctorId = data.DOCTOR_ID;
+        const doctorId = data.DOCTOR_ID;
         delete data.DOCTOR_ID;
 
-        var userId = data.USER_ID;
+        const userId = data.USER_ID;
         delete data.USER_ID;
 
-        var receiver = data.RECEIVER;
+        const receiver = data.RECEIVER;
         delete data.RECEIVER;
         //
 
@@ -151,7 +153,7 @@ app.io.on('connection', function(socket) {
         socket.to(data.ROOM_KEY).emit('serverMessage', data);
 
         //lastMsg 업데이트
-        var lastMsg = "";
+        const lastMsg = "";
         if (data.MSG_TYPE == 1) {
             lastMsg = '이미지';
         } else {
@@ -159,7 +161,7 @@ app.io.on('connection', function(socket) {
         }
 
         await new Promise(function(resolve, reject) {
-            var sql = `UPDATE ROOM_tbl SET
+            const sql = `UPDATE ROOM_tbl SET
                         LAST_MSG = ?,
                         WDATE = ?
                         WHERE ROOM_KEY = ?`;
@@ -174,7 +176,7 @@ app.io.on('connection', function(socket) {
 
         //DB에 저장 해준다!!
         await new Promise(function(resolve, reject) {
-            var sql = ""
+            const sql = ""
             var records = [];
             for (key in data) {
                 if (data[key] != 'null') {
@@ -196,7 +198,7 @@ app.io.on('connection', function(socket) {
 
         //no read 테이블에 넣어주기
         await new Promise(function(resolve, reject) {
-            var sql = "INSERT INTO TALK_NO_READ_tbl SET ROOM_KEY = ?, ID = ? ";
+            const sql = "INSERT INTO TALK_NO_READ_tbl SET ROOM_KEY = ?, ID = ? ";
             db.query(sql, [roomKey, receiver], function(err, rows, fields) {
                 if (!err) {
                     resolve(1);
@@ -213,7 +215,7 @@ app.io.on('connection', function(socket) {
         //푸시도 날려준다!!!
         var fcmArr = [];
         await new Promise(function(resolve, reject) {
-            var sql = "SELECT FCM, IS_ALARM FROM MEMB_tbl WHERE ID = ?"
+            const sql = "SELECT FCM, IS_ALARM FROM MEMB_tbl WHERE ID = ?"
             db.query(sql, receiver, function(err, rows, fields) {
                 // console.log(rows[0]);
                 if (!err) {
@@ -234,7 +236,7 @@ app.io.on('connection', function(socket) {
             fcmArr.push(data);
         });
 
-        var fields = {};
+        const fields = {};
         fields['notification'] = {};
         fields['data'] = {};
 
@@ -247,7 +249,7 @@ app.io.on('connection', function(socket) {
         fields['data']['room_key'] = roomKey;               //키값은 대문자 안먹음..
 
 
-        var options = {
+        const options = {
             'method': 'POST',
             'url': 'https://fcm.googleapis.com/fcm/send',
             'headers': {

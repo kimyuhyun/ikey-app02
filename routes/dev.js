@@ -75,7 +75,7 @@ async function checkMiddleWare(req, res, next) {
 router.get('/', checkMiddleWare, async function(req, res, next) {
 
     // await new Promise(function(resolve, reject) {
-    //     var sql = ``;
+    //     const sql = ``;
     //     db.query(sql, function(err, rows, fields) {
     //         console.log(rows);
     //         if (!err) {

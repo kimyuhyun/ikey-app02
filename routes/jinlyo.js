@@ -10,32 +10,6 @@ var requestIp = require('request-ip');
 var moment = require('moment');
 
 
-
-var upload = multer({
-    storage: multer.diskStorage({
-        destination: function(req, file, cb) {
-            var date = new Date();
-            var month = eval(date.getMonth() + 1);
-            if (eval(date.getMonth() + 1) < 10) {
-                month = "0" + eval(date.getMonth() + 1);
-            }
-            var dir = 'data/' + date.getFullYear() + "" + month;
-            if (!fs.existsSync(dir)) {
-                fs.mkdirSync(dir);
-            }
-            cb(null, dir);
-        },
-        filename: function(req, file, cb) {
-            var tmp = file.originalname.split('.');
-            var mimeType = tmp[tmp.length - 1];
-            if ('php|phtm|htm|cgi|pl|exe|jsp|asp|inc'.includes(mimeType)) {
-                mimeType = mimeType + "x";
-            }
-            cb(null, uniqid(file.filename) + '.' + mimeType);
-        }
-    })
-});
-
 async function checkMiddleWare(req, res, next) {
     const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     var rows;
@@ -88,7 +62,9 @@ router.get('/jinlyo_list', checkMiddleWare, async function(req, res, next) {
             (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as DOCTOR_THUMB
             FROM
             JINLYOBI_tbl as A
-            WHERE USER_ID = ? ORDER BY WDATE DESC
+            WHERE USER_ID = ?
+            AND STATUS IN (3,4)
+            ORDER BY WDATE DESC
         `;
 
         db.query(sql, userId, function(err, rows, fields) {
