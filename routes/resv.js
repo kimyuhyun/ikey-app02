@@ -153,6 +153,47 @@ router.get('/list/:USER_ID', checkMiddleWare, async function(req, res, next) {
     res.send(arr);
 });
 
+
+router.get('/doctor_resv_detail/:DATE/:DOCTOR_ID', checkMiddleWare, async function(req, res, next) {
+    const date = req.params.DATE;
+    const doctor_id = req.params.DOCTOR_ID;
+
+    var arr = [];
+
+    await new Promise(function(resolve, reject) {
+        const sql = `
+            SELECT
+            A.*,
+            (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.USER_ID) as USER_THUMB,
+            (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.USER_ID) as USER_NAME,
+            (SELECT HP FROM MEMB_tbl WHERE ID = A.USER_ID) as HP
+            FROM JINLYOBI_tbl as A
+            WHERE A.DOCTOR_ID = ?
+            AND A.DATE1 = ?
+            AND A.STATUS = 0
+            AND A.ROOM_KEY != ''
+            ORDER BY DATE1 ASC, TIME1 ASC
+        `;
+        db.query(sql, [doctor_id, date], function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                resolve(rows);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        for (obj of data) {
+            obj.HP = utils.decrypto(obj.HP);
+        }
+
+        arr = data;
+    });
+
+    res.send(arr);
+});
+
+
 router.get('/already_check/:user_id/:doctor_id/:date', checkMiddleWare, async function(req, res, next) {
     const { user_id, doctor_id, date } = req.params;
 

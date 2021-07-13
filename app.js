@@ -147,15 +147,17 @@ app.io.on('connection', function(socket) {
 
         const receiver = data.RECEIVER;
         delete data.RECEIVER;
+
+        const sender_name = data.WRITER_NAME;
         //
 
         // console.log('clientMessage', data);
         socket.to(data.ROOM_KEY).emit('serverMessage', data);
 
         //lastMsg 업데이트
-        const lastMsg = "";
+        var lastMsg = "";
         if (data.MSG_TYPE == 1) {
-            lastMsg = '이미지';
+            lastMsg = '사진';
         } else {
             lastMsg = data.MSG;
         }
@@ -176,7 +178,7 @@ app.io.on('connection', function(socket) {
 
         //DB에 저장 해준다!!
         await new Promise(function(resolve, reject) {
-            const sql = ""
+            var sql = ""
             var records = [];
             for (key in data) {
                 if (data[key] != 'null') {
@@ -211,7 +213,6 @@ app.io.on('connection', function(socket) {
 
 
 
-
         //푸시도 날려준다!!!
         var fcmArr = [];
         await new Promise(function(resolve, reject) {
@@ -236,12 +237,18 @@ app.io.on('connection', function(socket) {
             fcmArr.push(data);
         });
 
+        //사진 url 처리!!
+        if (data.MSG_TYPE == 1) {
+            data.MSG = '사진';
+        }
+        //
+
         const fields = {};
         fields['notification'] = {};
         fields['data'] = {};
 
         fields['registration_ids'] = fcmArr;
-        fields['notification']['title'] = process.env.APP_NAME;
+        fields['notification']['title'] = sender_name;
         fields['notification']['body'] = data.MSG;
         fields['notification']['click_action'] = 'chating_message'; //액티비티 다이렉트 호출
         fields['priority'] = 'high';

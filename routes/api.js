@@ -252,13 +252,16 @@ router.get('/get_room_info/:ROOM_KEY', checkMiddleWare, async function(req, res,
     res.send(row);
 });
 
+
 router.post('/set_room_state', checkMiddleWare, async function(req, res, next) {
     var state = req.body.STATE;
     var roomKey = req.body.ROOM_KEY;
     var yourId = req.body.YOUR_ID;
 
+    var obj = {};
+
     await new Promise(function(resolve, reject) {
-        var sql = "UPDATE ROOM_tbl SET STATE = ? WHERE ROOM_KEY = ?";
+        const sql = "UPDATE ROOM_tbl SET STATE = ? WHERE ROOM_KEY = ?";
         db.query(sql, [state, roomKey], function(err, rows, fields) {
             console.log(rows);
             if (!err) {
@@ -267,23 +270,11 @@ router.post('/set_room_state', checkMiddleWare, async function(req, res, next) {
                 console.log(err);
             }
         });
+    }).then(function(data) {
+        obj = data;
     });
 
-
-
-    var msg = "";
-    if (state == 1) {
-        msg = '진료 상담이 수락 되었습니다.'
-    } else if (state == 2) {
-        msg = '진료 상담이 거절 되었습니다.'
-    } else {
-        res.send('');
-        return;
-    }
-
-    //상대에게 푸시 보내주기!!!
-    utils.sendPush(res, yourId, msg, 'rooms');
-
+    res.send(obj);
 });
 
 

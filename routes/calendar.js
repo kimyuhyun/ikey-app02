@@ -53,6 +53,7 @@ async function checkMiddleWare(req, res, next) {
 
 router.get('/get_resv/:doctor_id/:start/:end', async function(req, res, next) {
     const { doctor_id, start, end } = req.params;
+    const is_dt = req.query.is_dt;
 
     const date1 = moment(start, "YYYY-MM-DD");
     const date2 = moment(end, "YYYY-MM-DD");
@@ -97,16 +98,22 @@ router.get('/get_resv/:doctor_id/:start/:end', async function(req, res, next) {
         });
         //
 
-        // 오늘 예약 못하게 막기
-        if (moment(today).isSame(date)) {
-            obj.IS_RESV = false;
-        }
-        //
 
-        //이전날 예약 못하게 막기
-        if (!moment(today).isBefore(date)) {
-            obj.IS_RESV = false;
+        if (!is_dt) {
+            console.log(is_dt);
+            // 오늘 예약 못하게 막기
+            if (moment(today).isSame(date)) {
+                obj.IS_RESV = false;
+            }
+
+            //이전날 예약 못하게 막기
+            if (!moment(today).isBefore(date)) {
+                obj.IS_RESV = false;
+            }
         }
+
+
+
 
 
         // 예약자수 가져오기!
@@ -299,6 +306,9 @@ router.get('/resv_detail/:DOCTOR_ID/:DATE', async function(req, res, next) {
     //휴식시간 마이너스 처리
     const hstm = moment(date + ' ' + obj.H_S_TM).add(eval('- + min'), 'm').format("HH:mm");
 
+    //진료 종료시간 마이너스 처리
+    const etm = moment(date + ' ' + obj.E_TM).add(eval('- + min'), 'm').format("HH:mm");
+
     while (true) {
         var v = moment(date + ' ' + tmp).add(min, 'm').format("HH:mm");
 
@@ -310,28 +320,11 @@ router.get('/resv_detail/:DOCTOR_ID/:DATE', async function(req, res, next) {
                 TIME: v,
                 IS_RESV: timeArr.includes(v),
             });
-
-            // await new Promise(function(resolve, reject) {
-            //     const sql = `SELECT COUNT(*) as CNT FROM JINLYOBI_tbl WHERE DOCTOR_ID = ? AND DATE1 = ? AND TIME1 = ?`;
-            //     db.query(sql, [doctorId, date, v], function(err, rows, fields) {
-            //         if (!err) {
-            //             resolve(rows[0].CNT);
-            //         } else {
-            //             console.log(err);
-            //         }
-            //     });
-            // }).then(function(data) {
-            //     arr.push({
-            //         TIME: v,
-            //         IS_RESV: data,
-            //     });
-            // });
-            //
         }
         //
 
         tmp = v;
-        if (v == obj.E_TM) {
+        if (v == etm) {
             break;
         }
     }

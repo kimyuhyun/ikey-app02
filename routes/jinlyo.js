@@ -63,7 +63,7 @@ router.get('/jinlyo_list', checkMiddleWare, async function(req, res, next) {
             FROM
             JINLYOBI_tbl as A
             WHERE USER_ID = ?
-            AND STATUS IN (3,4)
+            AND STATUS = 4
             ORDER BY WDATE DESC
         `;
 
@@ -225,6 +225,26 @@ router.get('/is_set_jinlyo_time/:ID', checkMiddleWare, async function(req, res, 
         });
     });
 });
+
+router.post('/set_status', checkMiddleWare, async function(req, res, next) {
+    const { idx, status } = req.body;
+    var obj = {};
+
+    await new Promise(function(resolve, reject) {
+        const sql = `UPDATE JINLYOBI_tbl SET STATUS = ? WHERE IDX = ?`;
+        db.query(sql, [status, idx], function(err, rows, fields) {
+            if (!err) {
+                resolve(rows);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        obj = data;
+    });
+    res.send(obj);
+});
+
 
 router.post('/set_jinlyo_time', async function(req, res, next) {
 
