@@ -134,7 +134,7 @@ router.get('/list/:USER_ID', checkMiddleWare, async function(req, res, next) {
             (SELECT HOSPITAL FROM MEMB_tbl WHERE ID = A.DOCTOR_ID) as HOSPITAL
             FROM JINLYOBI_tbl as A
             WHERE A.USER_ID = ?
-            AND A.STATUS = 0
+            AND A.STATUS < 4
             AND A.ROOM_KEY != ''
             ORDER BY DATE1 ASC, TIME1 ASC
         `;
