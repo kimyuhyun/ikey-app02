@@ -170,7 +170,6 @@ router.get('/doctor_resv_detail/:DATE/:DOCTOR_ID', checkMiddleWare, async functi
             FROM JINLYOBI_tbl as A
             WHERE A.DOCTOR_ID = ?
             AND A.DATE1 = ?
-            AND A.STATUS = 0
             AND A.ROOM_KEY != ''
             ORDER BY DATE1 ASC, TIME1 ASC
         `;
