@@ -210,6 +210,9 @@ router.post('/doctor_login', async function(req, res, next) {
 });
 
 
+
+
+
 router.get('/doctor_id_check', async function(req, res, next) {
     var id = req.query.ID;
 
@@ -246,6 +249,59 @@ router.post('/update_fcm_token', checkMiddleWare, async function(req, res, next)
         res.send(data);
     });
 });
+
+
+router.post('/doctor_register', checkMiddleWare, async function(req, res, next) {
+    var sql = ''
+    var records = new Array();
+
+    var hp = req.body.HP;
+
+    //핸드폰번호 암호화
+    hp = utils.crypto(hp);
+    //
+
+    req.body.HP = hp;
+
+
+    for (key in req.body) {
+        if (req.body[key]) {
+            if (key == 'PASS1') {
+                if (req.body.PASS1 != '') {
+                    sql += key + '= PASSWORD(?), ';
+                    records.push(req.body[key]);
+                }
+            } else {
+                sql += key + '= ?, ';
+                records.push(req.body[key]);
+            }
+        }
+    }
+
+    // console.log(records);return;
+
+    sql = "INSERT INTO MEMB_tbl SET " + sql + " WDATE = NOW(), LDATE = NOW()";
+    await db.query(sql, records, function(err, rows, fields) {
+        if (!err) {
+            console.log(rows);
+            var arr = new Object();
+            arr['code'] = 1;
+            arr['insertId'] = rows.insertId;
+            arr['msg'] = '등록 되었습니다.';
+            res.send(arr);
+        } else {
+            res.send(err);
+        }
+    });
+
+
+
+
+
+
+});
+
+
 
 router.get('/set_alarm/:ID/:IS_ALARM', checkMiddleWare, async function(req, res, next) {
     const id = req.params.ID;

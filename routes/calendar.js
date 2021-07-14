@@ -84,16 +84,21 @@ router.get('/get_resv/:doctor_id/:start/:end', async function(req, res, next) {
                     resolve(rows[0]);
                 } else {
                     console.log(err);
+                    resolve();
                 }
             });
         }).then(function(data) {
             obj.DATE = date;
             obj.YOIL = yoil;
+            obj.IS_RESV = false;
 
-            if (data.S_TM == '00:00' && data.E_TM == '00:00') {
-                obj.IS_RESV = false;
-            } else {
-                obj.IS_RESV = true;
+            if (data) {
+
+                if (data.S_TM == '00:00' && data.E_TM == '00:00') {
+                    obj.IS_RESV = false;
+                } else {
+                    obj.IS_RESV = true;
+                }
             }
         });
         //
