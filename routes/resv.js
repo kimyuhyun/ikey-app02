@@ -50,7 +50,7 @@ async function checkMiddleWare(req, res, next) {
 
 
 router.post('/set_resv', checkMiddleWare, async function(req, res, next) {
-    const { room_key, user_id, doctor_id, date, time, is_call } = req.body;
+    const { room_key, user_id, doctor_id, date, time, is_call, app_use_price, app_use_receipt_url } = req.body;
 
     //예약하기
     await new Promise(function(resolve, reject) {
@@ -62,10 +62,12 @@ router.post('/set_resv', checkMiddleWare, async function(req, res, next) {
             DATE1 = ?,
             TIME1 = ?,
             IS_CALL = ?,
+            APP_USE_PRICE = ?,
+            app_use_receipt_url = ?,
             WDATE = NOW(),
             LDATE = NOW()
         `;
-        db.query(sql, [room_key, user_id, doctor_id, date, time, is_call], function(err, rows, fields) {
+        db.query(sql, [room_key, user_id, doctor_id, date, time, is_call, app_use_price, app_use_receipt_url], function(err, rows, fields) {
             console.log(rows);
             if (!err) {
                 resolve(rows);
