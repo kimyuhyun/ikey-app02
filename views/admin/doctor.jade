@@ -3,11 +3,10 @@ extends layout
 block content
 
     div(class='row')
-        div(class='col-12 col-md-8 mt-4')
-            div(id='grid' style='width: 100%; height: 730px;')
+        div(class='col-12 col-md-6 p-0')
+            div(id='grid' style='width: 100%; height: 100%;')
 
-
-        div(class='col-12 col-md-4 mt-4')
+        div(class='col-12 col-md-6 p-0')
             div(id='form')
                 div(class='w2ui-page page-0')
                     div(class='w2ui-field w2ui-span2')                    
@@ -73,11 +72,38 @@ block content
                     button(class='w2ui-btn' name='reset') 리셋
                     button(class='w2ui-btn w2ui-btn-blue' name='save' id='save') 입력
 
+    div(class='row')
+        div(class='col-12 col-md-6 p-0')
+            div(id='grid2' style='width: 100%; height: 100%;')
+
+        div(class='col-12 col-md-6 p-0')
+            div(id='form2')
+                div(class='w2ui-page page-0')
+                    div(class='w2ui-field w2ui-span3')
+                        label 제목
+                        div
+                            input(name='TITLE')
+                            
+                    div(class='w2ui-field w2ui-span3')                    
+                        label 내용
+                        div
+                            textarea(name='MEMO', rows='4')
+                            
+                    div(class='w2ui-field w2ui-span3')
+                        label 유튜브링크
+                        div
+                            input(name='YT_ID')
+                            
+                div(class='w2ui-buttons')
+                    button(class='w2ui-btn' name='reset2') 리셋
+                    button(class='w2ui-btn w2ui-btn-blue' name='save2' id='save2') 입력
+
 
     //- 들여쓰기 중요함
     script.
         var fileLimitCount = 1;
         var table = 'MEMB_tbl';
+        var doctor_id = '';
         var config = {
             grid: {
                 url: {
@@ -133,6 +159,9 @@ block content
                             
                             form.refresh();
                             $("#save").text("수정");
+                            
+                            w2ui.grid2.url = '/crud/list?TABLE=JINLYO_SOGE_tbl&DOCTOR_ID=' + form.record.ID;
+                            w2ui.grid2.reload();
                         } else {
                             formClear();
                             $("#save").text("입력");
@@ -183,13 +212,13 @@ block content
                     { field: 'LEVEL1', type: 'select', required: true },	//세팅 해줘야함
                 ],
                 actions: {
-                    reset: function () {
+                    reset: function() {
                         w2ui.form.fields[0].disabled = false;
                         w2ui.form.fields[1].required = true;
                         formClear();
                         $("#save").text("입력");
                     },
-                    save: function () {
+                    save: function() {
                         var errors = this.validate();
                         if (errors.length > 0) {
                             return;
@@ -222,17 +251,130 @@ block content
                             }
 
                         });
-                    }
+                    },
                 },
             },
             onError: function(e) {
                 console.log(e.xhr.responseText);
             },
         };
+        var grid2 = {
+            recid: 'IDX',
+            limit: 10,
+            recordHeight: 25,
+            autoLoad: false,
+            name: 'grid2',
+            show: {
+                selectColumn: true,
+                footer: false,
+                toolbar: true,
+                toolbarDelete: true,
+            },
+            sortData: [{ field: 'LDATE', direction: 'DESC' }],
+            multiSelect: true,
+            multiSearch: true,
+            onError:function(e) {
+                console.log(e.xhr.responseText);
+            },
+            onLoad: function(e) {
+        		console.log(e.xhr.responseText);
+        	},
+            onDelete: function (target, event) {
+        		event.preventDefault();
+        		w2confirm('체크된 항목을 삭제하시겠습니까?')
+        			.yes(function () {
+        				var params = new URLSearchParams();
+        				for(var i = 0; i < w2ui.grid2.getSelection().length; i++){
+        					var value = w2ui.grid2.getSelection()[i];
+        					params.append('IDX', value);
+        				}
+        				axios.post('/crud/remove2?TABLE=JINLYO_SOGE_tbl', params).then(function(res) {
+        					w2ui.grid2.reload();
+        				});
+        			}).no(function () {
+        				return;
+        			});
+        	},
+            onClick: function(event) {
+                if (event.column == null) {
+                    return;
+                }
+                event.onComplete = function () {
+                    var sel = w2ui.grid2.getSelection();
+                    if (sel.length == 1) {
+                        w2ui.form2.recid  = sel[0];
+                        w2ui.form2.record = $.extend(true, {}, w2ui.grid2.get(sel[0]));
+        
+                        w2ui.form2.refresh();
+                        $("#save2").text("수정");
+        
+                    } else {
+                        formClear2();
+                        $("#save2").text("입력");
+                    }
+                }
+            },
+            columns: [
+                { field: 'IDX', caption: '번호', size: '40px', sortable: true, resizable: true, attr: 'align=center' },	//세팅 해줘야함
+                { field: 'TITLE', caption: '제목', size: '120px', resizable: true, sortable: true, attr: 'align=center' },	//세팅 해줘야함
+                { field: 'MEMO', caption: '내용', size: '100%', min: 150, resizable: true, sortable: true, attr: 'align=center' },	//세팅 해줘야함
+                { field: 'YT_ID', caption: '유튜브링크', size: '120px', resizable: true, sortable: true, attr: 'align=center' },	//세팅 해줘야함
+                
+            ],
+        };
+        var form2 = {
+            name: 'form2',
+            fields: [
+                { field: 'TITLE', type: 'text', required: false },
+                { field: 'MEMO', type: 'text', required: false },
+                { field: 'YT_ID', type: 'text', required: true },
+            ],
+            actions: {
+                reset2: function() {
+                    formClear2();
+                    $("#save2").text("입력");
+                },
+                save2: function() {
+                    var errors = this.validate();
+                    if (errors.length > 0) {
+                        return;
+                    }
+
+                    //- 세팅해줘야함.
+                    this.record.TABLE = 'JINLYO_SOGE_tbl';
+                    this.record.DOCTOR_ID = w2ui.form.record.ID;
+                    //
+
+                    var formData = new FormData();
+                    var self = this;
+                    for (var key in this.record) {
+                        formData.append(key, self.record[key]);
+                    }
+
+                    axios.post('/crud/write', formData).then(function(res) {
+                        console.dir(res.data);
+                        $("#save2").text("입력");
+                        formClear2();
+                        
+                        setTimeout(function(){
+                            w2ui.grid2.selectNone();
+                            w2ui.grid2.reload();
+                        }, 500);
+                    });
+                },
+            },
+            onError: function(e) {
+                console.log(e.xhr.responseText);
+            },
+        };
+        
         $(function () {
             $('#grid').w2grid(config.grid);
             $('#form').w2form(config.form);
-
+            
+            $('#grid2').w2grid(grid2);
+            $('#form2').w2form(form2);
+            
 
             //이거 한번 바꿔 보자!!
             axios.get('/crud/iterator?table=GRADE_tbl').then(function(res) {                
@@ -255,6 +397,12 @@ block content
             $(".file_box").remove();
         	w2ui.form.refresh();
             w2ui.form.resize();
+        }
+        function formClear2() {
+            console.log("formClear2");
+            w2ui.form2.clear();
+        	w2ui.form2.refresh();
+            w2ui.form2.resize();
         }
         function dragEnter(e) {
             console.log("드래그 요소가 들어왔을떄", e);

@@ -49,6 +49,7 @@ router.post('/list', checkMiddleWare, async function(req, res, next) {
     var table = req.query.TABLE;
     var board_id = req.query.board_id;
     var level1 = req.query.level1;
+    var doctor_id = req.query.DOCTOR_ID;
     var params;
 
     if (req.body.request != null) {
@@ -73,6 +74,10 @@ router.post('/list', checkMiddleWare, async function(req, res, next) {
 
     if (level1 != null) {
         where += " AND LEVEL1 = " + level1;
+    }
+
+    if (doctor_id) {
+        where += " AND DOCTOR_ID = '" + doctor_id + "' ";
     }
 
     if (params.search != null) {
@@ -237,6 +242,21 @@ router.post('/remove', checkMiddleWare, async function(req, res, next) {
         sql = "DELETE FROM " + table + " WHERE IDX = " + idx;
         db.query(sql);
         console.log(sql);
+    }
+
+    var arr = new Object();
+    arr['code'] = 1;
+    res.send(arr);
+});
+
+router.post('/remove2', checkMiddleWare, async function(req, res, next) {
+    var table = req.query.TABLE;
+    var idxs = req.body.IDX;
+
+    var sql = "";
+    for (idx of idxs) {
+        sql = "DELETE FROM " + table + " WHERE IDX = " + idx;
+        db.query(sql);
     }
 
     var arr = new Object();

@@ -78,13 +78,15 @@ router.get('/get_resv/:doctor_id/:start/:end', async function(req, res, next) {
 
         //요일별 진료시간 가져오기!
         await new Promise(function(resolve, reject) {
-            const sql = `SELECT YOIL, S_TM, E_TM, H_S_TM, H_E_TM FROM JINLYO_TIME_tbl WHERE ID = ? AND YOIL = ? `;
+            const sql = `SELECT YOIL, S_TM, E_TM FROM JINLYO_TIME_tbl WHERE ID = ? AND YOIL = ? `;
             db.query(sql, [doctor_id, yoil], function(err, rows, fields) {
                 if (!err) {
                     resolve(rows[0]);
                 } else {
-                    console.log(err);
-                    resolve();
+                    // console.log(err);
+                    res.send(err);
+                    return;
+                    // resolve();
                 }
             });
         }).then(function(data) {
@@ -93,7 +95,6 @@ router.get('/get_resv/:doctor_id/:start/:end', async function(req, res, next) {
             obj.IS_RESV = false;
 
             if (data) {
-
                 if (data.S_TM == '00:00' && data.E_TM == '00:00') {
                     obj.IS_RESV = false;
                 } else {
@@ -103,9 +104,9 @@ router.get('/get_resv/:doctor_id/:start/:end', async function(req, res, next) {
         });
         //
 
+        // console.log('is_dt', is_dt);
 
         if (!is_dt) {
-            console.log(is_dt);
             // 오늘 예약 못하게 막기
             if (moment(today).isSame(date)) {
                 obj.IS_RESV = false;
@@ -130,7 +131,12 @@ router.get('/get_resv/:doctor_id/:start/:end', async function(req, res, next) {
             }
             //
             await new Promise(function(resolve, reject) {
-                const sql = `SELECT COUNT(*) as CNT FROM JINLYOBI_tbl WHERE DOCTOR_ID = ? AND DATE1 = ? `;
+                const sql = `
+                    SELECT
+                    COUNT(*) as CNT,
+                    (SELECT COUNT(*) FROM MEMB_tbl WHERE ID = A.USER_ID) as IS_MEMBER
+                    FROM JINLYOBI_tbl as A
+                    WHERE A.DOCTOR_ID = ? AND A.DATE1 = ? `;
                 db.query(sql, [doctor_id, date], function(err, rows, fields) {
                     if (!err) {
                         resolve(rows[0]);
@@ -139,7 +145,11 @@ router.get('/get_resv/:doctor_id/:start/:end', async function(req, res, next) {
                     }
                 });
             }).then(function(data) {
-                obj.RESV_CNT = data.CNT;
+                if (data.IS_MEMBER == 0) {
+                    obj.RESV_CNT = 0;
+                } else {
+                    obj.RESV_CNT = data.CNT;
+                }
             });
         } else {
             obj.RESV_CNT = 0;

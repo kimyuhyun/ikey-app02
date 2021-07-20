@@ -18,7 +18,7 @@ class Utils {
                                 ID = ?,
                                 NAME1 = ?,
                                 LINK = ? `;
-                            console.log(sql, [req.session.ID, req.query.NAME1, CURRENT_URL]);
+                            // console.log(sql, [req.session.ID, req.query.NAME1, CURRENT_URL]);
                             db.query(sql, [req.session.ID, req.query.NAME1, CURRENT_URL], function(err, rows, fields) {
                                 self.getSaveMenu(req).then(function(data) {
                                     resolve(data);
@@ -44,7 +44,7 @@ class Utils {
 
     getSaveMenu(req) {
         return new Promise(function(resolve, reject) {
-            console.log(req.session);
+            // console.log(req.session);
             if (req.session.ID != null) {
                 db.query("SELECT * FROM SAVE_MENU_tbl WHERE ID = ?", req.session.ID, function(err, rows, fields) {
                     if (!err) {

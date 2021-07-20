@@ -9,6 +9,8 @@ const utils = require('../Utils');
 const requestIp = require('request-ip');
 const moment = require('moment');
 const crypto = require('crypto');
+const axios = require('axios');
+const qs = require('qs');
 
 var upload = multer({
     storage: multer.diskStorage({
@@ -411,6 +413,151 @@ router.get('/set_logout/:ID', async function(req, res, next) {
     });
 });
 
+router.get('/find_id/:hp', checkMiddleWare, async function(req, res, next) {
+    var hp = req.params.hp;
+    var id = '';
+    var code = 0;
+
+    hp = utils.crypto(hp);
+
+    await new Promise(function(resolve, reject) {
+        var sql = `SELECT ID FROM MEMB_tbl WHERE HP = ? AND LEVEL1 in (5,6)`;
+        db.query(sql, hp, function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                resolve(rows[0]);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+
+        if (data) {
+            id = data.ID;
+            code = 1;
+        }
+    });
+
+    res.send({
+        code: code,
+        id: id,
+    });
+});
+
+router.get('/find_pw/:id/:hp', checkMiddleWare, async function(req, res, next) {
+    var id = req.params.id;
+    var hp = req.params.hp;
+    var cnt = 0;
+
+    hp = utils.crypto(hp);
+
+    await new Promise(function(resolve, reject) {
+        var sql = `SELECT COUNT(*) as cnt FROM MEMB_tbl WHERE ID = ? AND HP = ? AND LEVEL1 in (5,6)`;
+        db.query(sql, [id, hp], function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                resolve(rows[0].cnt);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        cnt = data;
+    });
+
+    if (cnt == 1) {
+        //회원이 있다면 패스워드 변경한다!!
+        var pw = '248367';
+
+        var sql = `UPDATE MEMB_tbl SET PASS1 = PASSWORD(?) WHERE ID = ?`;
+        db.query(sql, [pw, id], function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                pwModifiedSendSMS(res, hp, pw);
+            } else {
+                console.log(err);
+            }
+        });
+
+    } else {
+        res.send({
+            code: 0,
+            msg: '일치하는 회원정보가 없습니다.',
+        });
+    }
+
+});
+
+
+function pwModifiedSendSMS(res, hp, pw) {
+    hp = utils.decrypto(hp);
+
+    hp = hp.replace(/-/gi, "");
+
+    //create signature2
+    var CryptoJS = require('crypto-js');
+    var SHA256 = require('crypto-js/sha256');
+    var Base64 = require('crypto-js/enc-base64');
+
+    const date = Date.now().toString();
+	const uri = process.env.uri;
+	const secretKey = process.env.secretKey;
+	const accessKey = process.env.accessKey;
+	const method = 'POST';
+	const space = ' ';
+	const newLine = "\n";
+	const url = `https://sens.apigw.ntruss.com/sms/v2/services/${uri}/messages`;
+	const url2 = `/sms/v2/services/${uri}/messages`;
+
+	const  hmac = CryptoJS.algo.HMAC.create(CryptoJS.algo.SHA256, secretKey);
+
+	hmac.update(method);
+	hmac.update(space);
+	hmac.update(url2);
+	hmac.update(newLine);
+	hmac.update(date);
+	hmac.update(newLine);
+	hmac.update(accessKey);
+
+	const hash = hmac.finalize();
+	const signature = hash.toString(CryptoJS.enc.Base64);
+
+    var config = {
+        method: 'post',
+        url: url,
+        headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+            'x-ncp-iam-access-key': accessKey,
+			'x-ncp-apigw-timestamp': date,
+			'x-ncp-apigw-signature-v2': signature,
+        },
+        data: {
+			type: 'SMS',
+            contentType: 'COMM',
+			countryCode: '82',
+			from: '0518919170',
+			content: `${process.env.APP_NAME} 변경된 패스워드는 [${pw}] 입니다.`,
+			messages: [
+				{
+					to: `${hp}`
+				}
+			],
+		}
+    };
+
+    axios(config).then(function (response) {
+        res.send({
+            code: 1,
+            msg: '패스워드가 변경되어 문자메시지로 전송되었습니다.',
+        });
+    }).catch(function (error) {
+        console.log(error);
+        res.send({
+            code: 0,
+            msg: '핸드폰 번호가 올바르지 않습니다.'
+        });
+    });
+}
 
 router.get('/', checkMiddleWare, async function(req, res, next) {
 /*

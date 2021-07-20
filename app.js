@@ -216,7 +216,7 @@ app.io.on('connection', function(socket) {
         //푸시도 날려준다!!!
         var fcmArr = [];
         await new Promise(function(resolve, reject) {
-            const sql = "SELECT FCM, IS_ALARM FROM MEMB_tbl WHERE ID = ?"
+            const sql = "SELECT FCM, IS_ALARM FROM MEMB_tbl WHERE ID = ? AND IS_LOGOUT = 0"
             db.query(sql, receiver, function(err, rows, fields) {
                 // console.log(rows[0]);
                 if (!err) {

@@ -292,6 +292,30 @@ router.get('/get_jinlyi_time/:DOCTOR_ID', async function(req, res, next) {
     });
 });
 
+router.get('/get_jinlyi_soge/:DOCTOR_ID', async function(req, res, next) {
+    const doctorId = req.params.DOCTOR_ID;
+    var arr = [];
+
+    await new Promise(function(resolve, reject) {
+        const sql = `SELECT * FROM JINLYO_SOGE_tbl WHERE DOCTOR_ID = ? ORDER BY LDATE DESC`;
+        db.query(sql, doctorId, function(err, rows, fields) {
+            if (!err) {
+                resolve(rows);
+            } else {
+                console.log(err);
+                res.send(err);
+                return;
+            }
+        });
+    }).then(function(data) {
+        arr = data;
+    });
+
+    res.send(arr);
+});
+
+
+
 async function getJinlyoGbn(doctorId) {
     let yoil = moment().format('ddd').toUpperCase();
     const time = moment().format('HH:mm');

@@ -183,10 +183,14 @@ router.get('/doctor_resv_detail/:DATE/:DOCTOR_ID', checkMiddleWare, async functi
         });
     }).then(function(data) {
         for (obj of data) {
-            obj.HP = utils.decrypto(obj.HP);
-        }
+            if (obj.HP) {
+                obj.HP = utils.decrypto(obj.HP);
+            }
 
-        arr = data;
+            if (obj.USER_NAME) {
+                arr.push(obj);
+            }
+        }
     });
 
     res.send(arr);
