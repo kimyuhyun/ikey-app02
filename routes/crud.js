@@ -202,7 +202,14 @@ router.post('/write', checkMiddleWare, upload.array('FILES'), async function(req
             }
         });
     }
-    // console.log(sql, records);
+
+    //1:1문의 푸시알림
+    if (req.body.BOARD_ID == 'cscenter') {
+        utils.sendPush(null, req.body.ID, '1:1문의에 답변이 등록되었습니다.');
+    }
+    //
+
+
 });
 
 router.post('/delete', checkMiddleWare, async function(req, res, next) {
