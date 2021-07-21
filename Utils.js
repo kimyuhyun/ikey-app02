@@ -134,10 +134,12 @@ class Utils {
                     if (rows.length > 0) {
                         resolve(rows[0].FCM);
                     } else {
-                        res.send(id + '의 IS_ALARM, IS_LOGOUT 값을 체크해보세요.');
+                        console.log(id + '의 IS_ALARM, IS_LOGOUT 값을 체크해보세요.');
+                        return;
                     }
                 } else {
                     console.log(err);
+                    return;
                 }
             });
         }).then(function(data) {
