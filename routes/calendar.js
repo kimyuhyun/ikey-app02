@@ -136,7 +136,7 @@ router.get('/get_resv/:doctor_id/:start/:end', async function(req, res, next) {
                     COUNT(*) as CNT,
                     (SELECT COUNT(*) FROM MEMB_tbl WHERE ID = A.USER_ID) as IS_MEMBER
                     FROM JINLYOBI_tbl as A
-                    WHERE A.DOCTOR_ID = ? AND A.DATE1 = ? `;
+                    WHERE A.DOCTOR_ID = ? AND A.DATE1 = ? AND STATUS = 0`;
                 db.query(sql, [doctor_id, date], function(err, rows, fields) {
                     if (!err) {
                         resolve(rows[0]);
@@ -296,7 +296,7 @@ router.get('/resv_detail/:DOCTOR_ID/:DATE', async function(req, res, next) {
     //해당일 예약시간 가져오기
     var timeArr = [];
     await new Promise(function(resolve, reject) {
-        const sql = `SELECT TIME1 FROM JINLYOBI_tbl WHERE DOCTOR_ID = ? AND DATE1 = ?`;
+        const sql = `SELECT TIME1 FROM JINLYOBI_tbl WHERE DOCTOR_ID = ? AND DATE1 = ? AND STATUS = 0`;
         db.query(sql, [doctorId, date], function(err, rows, fields) {
             if (!err) {
                 resolve(rows);

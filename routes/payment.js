@@ -154,8 +154,10 @@ router.get('/app_use_pirce_complete', async function(req, res, next) {
         console.log(response.data.response);
         if (response.data.response.status == 'paid') {
             const app_use_receipt_url = response.data.response.receipt_url;
+            const imp_uid2 = response.data.response.imp_uid;
+
             res.render('./payment/payment_ok.html', {
-                result: 'finish|' + app_use_receipt_url,
+                result: 'finish|' + app_use_receipt_url + '|' + imp_uid2,
             });
         }
     }).catch(function (error) {

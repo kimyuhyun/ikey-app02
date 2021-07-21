@@ -7,6 +7,8 @@ const multer = require('multer');
 const uniqid = require('uniqid');
 const utils = require('../Utils');
 const moment = require('moment');
+const qs = require('qs');
+const axios = require('axios');
 
 
 async function checkMiddleWare(req, res, next) {
@@ -50,7 +52,7 @@ async function checkMiddleWare(req, res, next) {
 
 
 router.post('/set_resv', checkMiddleWare, async function(req, res, next) {
-    const { room_key, user_id, doctor_id, date, time, is_call, app_use_price, app_use_receipt_url } = req.body;
+    const { room_key, user_id, doctor_id, date, time, is_call, app_use_price, app_use_receipt_url, imp_uid2 } = req.body;
 
     //예약하기
     await new Promise(function(resolve, reject) {
@@ -64,10 +66,11 @@ router.post('/set_resv', checkMiddleWare, async function(req, res, next) {
             IS_CALL = ?,
             APP_USE_PRICE = ?,
             app_use_receipt_url = ?,
+            imp_uid2 = ?,
             WDATE = NOW(),
             LDATE = NOW()
         `;
-        db.query(sql, [room_key, user_id, doctor_id, date, time, is_call, app_use_price, app_use_receipt_url], function(err, rows, fields) {
+        db.query(sql, [room_key, user_id, doctor_id, date, time, is_call, app_use_price, app_use_receipt_url, imp_uid2], function(err, rows, fields) {
             console.log(rows);
             if (!err) {
                 resolve(rows);
@@ -120,6 +123,84 @@ router.post('/set_resv', checkMiddleWare, async function(req, res, next) {
 
 });
 
+
+router.post('/set_resv_cancel', checkMiddleWare, async function(req, res, next) {
+    const idx = req.body.IDX;
+
+    var imp_uid2 = '';
+
+    //imp_uid2 가져오기
+    await new Promise(function(resolve, reject) {
+        const sql = `SELECT imp_uid2 FROM JINLYOBI_tbl WHERE IDX = ?`;
+        db.query(sql, idx, function(err, rows, fields) {
+            if (!err) {
+                resolve(rows[0].imp_uid2);
+            } else {
+                console.log(err);
+                res.send(err);
+            }
+        });
+    }).then(function(data) {
+        imp_uid2 = data;
+    });
+
+    var access_token = '';
+
+    await new Promise(function(resolve, reject) {
+        /* 액세스 토큰(access token) 발급 */
+        const data = qs.stringify({
+            'imp_key': process.env.imp_key,
+            'imp_secret': process.env.imp_secret,
+        });
+        const config = {
+            method: 'post',
+            url: 'https://api.iamport.kr/users/getToken',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            data : data
+        };
+        axios(config).then(function(res) {
+            access_token = res.data.response.access_token;
+            resolve();
+        }).catch(function (error) {
+            res.send(error);
+        });
+    }).then();
+
+    //취소 API 호출
+    axios({
+        url: "https://api.iamport.kr/payments/cancel",
+        method: "post",
+        headers: { "Content-Type": "application/json", "Authorization": access_token },
+        data: {
+            reason: '예약취소',     // 가맹점 클라이언트로부터 받은 환불사유
+            imp_uid: imp_uid2,        // imp_uid를 환불 고유번호로 입력
+        }
+    }).then(async function(response) {
+        console.log(response.data.response);
+
+        if (response.data.response.status == 'cancelled') {
+            //예약취소 상태로 변경
+            await new Promise(function(resolve, reject) {
+                const sql = `UPDATE JINLYOBI_tbl SET STATUS = -1, APP_USE_PRICE = 0 WHERE IDX = ?`;
+                db.query(sql, idx, function(err, rows, fields) {
+                    if (!err) {
+                        resolve(rows);
+                    } else {
+                        console.log(err);
+                        res.send(err);
+                        return;
+                    }
+                });
+            }).then(function(data) {
+                res.send(data);
+            });
+        }
+    }).catch(function (error) {
+        res.send(error);
+    });
+
+
+});
 
 
 router.get('/list/:USER_ID', checkMiddleWare, async function(req, res, next) {
@@ -203,7 +284,7 @@ router.get('/already_check/:user_id/:doctor_id/:date', checkMiddleWare, async fu
     const { user_id, doctor_id, date } = req.params;
 
     await new Promise(function(resolve, reject) {
-        const sql = `SELECT COUNT(*) as CNT FROM JINLYOBI_tbl WHERE USER_ID = ? AND DOCTOR_ID = ? AND DATE1 = ?`;
+        const sql = `SELECT COUNT(*) as CNT FROM JINLYOBI_tbl WHERE USER_ID = ? AND DOCTOR_ID = ? AND DATE1 = ? AND STATUS = 0`;
         db.query(sql, [user_id, doctor_id, date], function(err, rows, fields) {
             console.log(rows);
             if (!err) {
