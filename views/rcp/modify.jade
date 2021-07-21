@@ -6,6 +6,8 @@ block content
         input(type='hidden', name='USER_ID', value='#{row.USER_ID}')
         input(type='hidden', name='IDX', value='#{row.IDX}')
         input(type='hidden', name='STATUS', value='4')
+        input(type='hidden', name='RECIPE', id='recipe' value='#{row.RECIPE}')
+        input(type='hidden', name='RECEIPT', id='receipt', value='#{row.RECEIPT}')
         
         div(class='form-floating mb-3')
             input(class='form-control', value='#{row.USER_NAME}', readonly)                
@@ -15,9 +17,9 @@ block content
             input(class='form-control', name='PRICE', id='PRICE', type='text', value='#{row.PRICE}', required)
             label(class='form-label') 진료비를 입력해주세요.
             
-        div(class='form-floating mb-3')
-            input(class='form-control', name='APP_USE_PRICE', id='APP_USE_PRICE', type='text', value='#{row.APP_USE_PRICE}')
-            label(class='form-label') 앱이용료를 입력해주세요.
+        //- div(class='form-floating mb-3')
+        //-     input(class='form-control', name='APP_USE_PRICE', id='APP_USE_PRICE', type='text', value='#{row.APP_USE_PRICE}')
+        //-     label(class='form-label') 앱이용료를 입력해주세요.
             
         div(class='form-floating mb-3')
             input(class='form-control', name='RCP_PRICE', id='RCP_PRICE', type='text', value='#{row.RCP_PRICE}')
@@ -28,29 +30,39 @@ block content
             label(class='form-label') 배송비를 입력해주세요.
         
         div(class='form-floating mb-3')
-            input(class='form-control', name='STATUS_MSG', type='text', value='#{row.STATUS_MSG}')
+            input(class='form-control', name='STATUS_MSG', type='text', value='#{row.STATUS_MSG==""?"처방전이 등록되었습니다. 수납을 진행해주세요.":row.STATUS_MSG}')
             label(class='form-label') 메시지
             
-        div(class='mb-3')
-            label(class='form-label mb-0') 처방전
-            input(class='form-control', name='RECIPE', type='file')
-            if row.RECIPE != ''
-                a(href='#{row.RECIPE}', target='_blank') [보기]
+        div(class='d-flex flex-wrap mb-3')
+            div
+                label(class='form-label mb-0') 처방전
+                div(class='d-flex flex-row')
+                    div(class='p-0 me-1', style='position: relative; min-width: 120px; height: 120px;', onDragEnter='dragEnter("recipe", event)', onDragLeave='dragLeave("recipe", event)', onDragOver='dragOver(event)', onDrop='drop("recipe", event)')
+                        label(for='file-input')
+                            img(id='recipe_img', src='/images/no-img2.png' class='img-thumbnail' style='width: 120px; height: 120px;')
+                        img(id='recipe_x', onclick='deleteImage("recipe")', src='/images/photo_x.png' class='X', style='position: absolute; cursor: pointer; top: -10px; right: -9px; display: none; width: 25px; height: 25px;')
+                    
+            div(class='ms-4')
+                label(class='form-label mb-0') 병원영수증
+                div(class='d-flex flex-row')
+                    div(class='p-0 me-1', style='position: relative; min-width: 120px; height: 120px;', onDragEnter='dragEnter("receipt", event)', onDragLeave='dragLeave("receipt", event)', onDragOver='dragOver(event)', onDrop='drop("receipt", event)')
+                        label(for='file-input')
+                            img(id='receipt_img', src='/images/no-img2.png' class='img-thumbnail' style='width: 120px; height: 120px;')
+                        img(id='receipt_x', onclick='deleteImage("receipt")', src='/images/photo_x.png' class='X', style='position: absolute; cursor: pointer; top: -10px; right: -9px; display: none; width: 25px; height: 25px;')
             
-        div(class='mb-3')
-            label(class='form-label mb-0') 영수증
-            input(class='form-control', name='RECEIPT', type='file')
-            if row.RECEIPT != ''
-                a(href='#{row.RECEIPT}', target='_blank') [보기]
 
         div(class='d-flex justify-content-between')
             button(class='btn btn-danger', type='button', onclick='del()')
-                i(class="fas fa-trash-alt")  삭제
+                | 삭제
             
-            button(class='btn btn-primary', type='submit')
-                i(class="fas fa-check")  수정
+            div
+                a(class='btn btn-outline-secondary me-1', href='/rcp/#{info.token}?USER_ID=#{row.USER_ID}')
+                    | 목록
+                button(class='btn btn-primary', type='submit')
+                    | 수정
+                    
 
-    
+    script(src='/javascripts/axios.min.js')
     script.
         function del() {
             if (confirm('삭제하시겠습니까?')) {
@@ -78,6 +90,76 @@ block content
         $(document).ready(function(){
             $('#PRICE').on('keyup',function(){
                 updateTextView($(this));
-            });            
+            });
+            
+            $('#RCP_PRICE').on('keyup',function(){
+                updateTextView($(this));
+            });
+            
+            $('#DLV_PRICE').on('keyup',function(){
+                updateTextView($(this));
+            });
+            
             updateTextView($('#PRICE'));
+            updateTextView($('#RCP_PRICE'));
+            updateTextView($('#DLV_PRICE'));
+            
+            //처방전,  세팅!!
+            if ("#{row.RECIPE}") {
+                $("#recipe_img").attr("src", "#{row.RECIPE}");
+                $("#recipe_img").attr("onclick", "window.open('#{row.RECIPE}')");
+                $("#recipe_x").show();
+                $("#recipe_img").show();
+                $("#recipe_img").addClass("img-thumbnail");
+                $("#recipe_img").removeClass("bg-dark");
+            }
+            // 병원영수증 세팅!!
+            if ("#{row.RECEIPT}") {
+                $("#receipt_img").attr("src", "#{row.RECEIPT}");
+                $("#receipt_img").attr("onclick", "window.open('#{row.RECEIPT}')");
+                $("#receipt_x").show();
+                $("#receipt_img").show();
+                $("#receipt_img").addClass("img-thumbnail");
+                $("#receipt_img").removeClass("bg-dark");
+            }
         });
+        
+        function dragEnter(i, e) {
+            console.log(i, "드래그 요소가 들어왔을떄", e);
+            $("#"+i+"_img").addClass("bg-dark");
+        }
+        function dragLeave(i, e) {
+            console.log(i, "드래그 요소가 나갔을때");
+        	$("#"+i+"_img").addClass("img-thumbnail");
+        	$("#"+i+"_img").removeClass("bg-dark");
+        }
+        function dragOver(e) {
+        	e.stopPropagation();
+            e.preventDefault();
+        }
+        function drop(i, e) {
+            console.log(i, "드래그한 항목을 떨어뜨렸을때");
+            e.preventDefault();
+            var file = e.dataTransfer.files[0];
+            var formData = new FormData();
+        	formData.append("upload_file", file, file.name);
+        	axios.post("http://images.lazulsoft.com/file_upload", formData).then(function(res) {
+        		console.dir(res.data);
+                $("#"+i+"_img").attr("src", res.data.url);
+        		$("#"+i+"_img").attr("onclick", "window.open('"+res.data.url+"')");
+        		$("#"+i+"_x").show();
+                $("#"+i+"_img").show();
+        		$("#"+i+"_img").addClass("img-thumbnail");
+        		$("#"+i+"_img").removeClass("bg-dark");
+                
+                $("#"+i).val(res.data.url);
+            }).catch(function(err){
+                console.log(err);
+            });
+        }
+        function deleteImage(i) {
+        	$("#"+i+"_img").attr("src", "/images/no-img2.png");
+            $("#"+i+"_img").attr("onclick", "");
+            $("#"+i+"_x").hide();
+            $("#"+i).val("0");
+        }

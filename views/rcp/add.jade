@@ -4,6 +4,7 @@ block content
     form(method='post', action='/rcp/write?token=#{info.token}', enctype='multipart/form-data')
         input(type='hidden', name='DOCTOR_ID', value='#{info.ID}')
         input(type='hidden', name='USER_ID', value='#{userId}')
+        input(type='hidden', name='STATUS', value='4')
 
         div(class='form-floating mb-3')
             input(class='form-control', value='#{userName}', readonly)                

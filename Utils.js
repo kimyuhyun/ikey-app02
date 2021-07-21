@@ -166,16 +166,21 @@ class Utils {
         };
 
         axios(config).then(function (response) {
-            res.send(response.data);
             //알림내역저장
             if (response.data.success == 1) {
                 const sql = "INSERT INTO ALARM_tbl SET ID = ?, MESSAGE = ?, WDATE = NOW()";
                 db.query(sql, [id, msg]);
             }
             //
+
+            if (res) {
+                res.send(response.data);
+            }
         }).catch(function (error) {
             console.log(error);
-            res.send('err: ' + error);
+            if (res) {
+                res.send('err: ' + error);
+            }
         });
     }
 

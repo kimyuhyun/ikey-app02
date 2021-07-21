@@ -16,16 +16,16 @@ block content
     table(class='table table-sm table-striped table-hover')
         tr
             th(class='text-center') No.
+            th(class='text-center') 예약일
+            th(class='text-center') 시간
             th(class='text-center') 이름
             th(class='text-end') 진료비
-            th(class='text-end') 앱이용료
-            th(class='text-end') 제조비
-            th(class='text-end') 배송비
+            //- th(class='text-end') 앱이용료
+            th(class='text-end') 약제조비
+            th(class='text-end') 약배송비
             th(class='text-center') 결제Y/N
             th(class='text-center') 처방전
             th(class='text-center') 영수증
-            th(class='text-center') 예약일
-            th(class='text-center') 시간
             
         - each row, i in jinlyobiList
             - var date = new Date(row.WDATE);
@@ -40,24 +40,25 @@ block content
             - var postTime = date.getFullYear() + "-" + month + "-" + day;
             tr(style='cursor: pointer;', onclick='detailView(#{row.IDX})')
                 td(class='text-center') #{i+1}
+                td(class='text-center') #{row.DATE1}
+                td(class='text-center') #{row.TIME1}
                 td(class='text-center') #{row.USER_NAME}
                 td(class='text-end') #{row.PRICE.toLocaleString()}
-                td(class='text-end') #{row.APP_USE_PRICE.toLocaleString()}
+                //- td(class='text-end') #{row.APP_USE_PRICE.toLocaleString()}
                 td(class='text-end') #{row.RCP_PRICE.toLocaleString()}
                 td(class='text-end') #{row.DLV_PRICE.toLocaleString()}
                 td(class='text-center') #{row.IS_PAYMENT==0?'X':'O'}
                 td(class='text-center') #{row.RECIPE==''?'X':'O'}
                 td(class='text-center') #{row.RECEIPT==''?'X':'O'}
-                td(class='text-center') #{row.DATE1}
-                td(class='text-center') #{row.TIME1}
+                
                 
     
     
     
-    if userId != null
-        div(class='text-end mt-4')
-            a(class='btn btn-primary', href='/rcp/#{info.token}/add/#{userId}') 
-                i(class="fas fa-plus")  진료비생성
+    //- if userId != null
+    //-     div(class='text-end mt-4')
+    //-         a(class='btn btn-primary', href='/rcp/#{info.token}/add/#{userId}') 
+    //-             i(class="fas fa-plus")  진료비생성
 
 
     script.

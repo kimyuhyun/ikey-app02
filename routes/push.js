@@ -13,12 +13,12 @@ const axios = require('axios');
 // http://52.79.237.255/push/send/naver_avoJmSbrvKjIOUFNta1HmWyfqJBWzG6GYXVCdHbVExw/푸시테스트
 // http://localhost:3000/push/send/naver_avoJmSbrvKjIOUFNta1HmWyfqJBWzG6GYXVCdHbVExw/푸시테스트
 
-router.get('/send/:id/:msg/:flag', async function(req, res, next) {
+router.get('/send/:id/:msg/:menu_flag', async function(req, res, next) {
     const id = req.params.id;
     const msg = req.params.msg;
-    const flag = req.params.flag;
+    const menu_flag = req.params.menu_flag;
 
-    utils.sendPush(res, id, msg, flag);
+    utils.sendPush(res, id, msg, menu_flag);
 });
 
 router.get('/', async function(req, res, next) {

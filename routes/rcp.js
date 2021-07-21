@@ -137,14 +137,28 @@ router.get('/:TOKEN', async function(req, res, next) {
     });
 
     await new Promise(function(resolve, reject) {
+        // sql = `
+        //     SELECT
+        //     (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.USER_ID) as USER_NAME,
+        //     (SELECT ID FROM MEMB_tbl WHERE ID = A.USER_ID) as USER_ID
+        //     FROM
+        //     ROOM_tbl as A
+        //     WHERE A.DOCTOR_ID = ?
+        //     ORDER BY WDATE DESC `;
         sql = `
             SELECT
-            (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.USER_ID) as USER_NAME,
-            (SELECT ID FROM MEMB_tbl WHERE ID = A.USER_ID) as USER_ID
-            FROM
-            ROOM_tbl as A
-            WHERE A.DOCTOR_ID = ?
-            ORDER BY WDATE DESC`;
+            Z.*
+            FROM (
+                SELECT
+                (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.USER_ID) as USER_NAME,
+                A.*
+                FROM JINLYOBI_tbl as A
+                WHERE A.DOCTOR_ID = 'test@test.com'
+            ) as Z
+            WHERE Z.USER_NAME is not null
+            GROUP BY Z.USER_ID
+            ORDER BY Z.LDATE DESC
+        `;
         db.query(sql, info.ID, function(err, rows, fields) {
             console.log(rows);
             if (!err) {
@@ -298,24 +312,10 @@ router.post('/write', upload.fields([{ name: 'RECIPE' }, { name: 'RECEIPT' }]), 
     var userId = req.body.USER_ID;
     var statusMsg = req.body.STATUS_MSG;
 
-    if (req.files['RECIPE']) {
-        await utils.setResize(req.files['RECIPE'][0]).then(function(newFileName) {
-            newFileName = process.env.HOST_NAME + '/' + newFileName;
-            console.log('newFileName', newFileName);
-            req.body.RECIPE = newFileName;
-        });
-    }
 
-    if (req.files['RECEIPT']) {
-        await utils.setResize(req.files['RECEIPT'][0]).then(function(newFileName) {
-            newFileName = process.env.HOST_NAME + '/' + newFileName;
-            console.log('newFileName', newFileName);
-            req.body.RECEIPT = newFileName;
-        });
-    }
-
-    // delete req.body.UPLOADED_FILES;
     req.body.PRICE = replaceAll(req.body.PRICE, ',', '');
+    req.body.RCP_PRICE = replaceAll(req.body.RCP_PRICE, ',', '');
+    req.body.DLV_PRICE = replaceAll(req.body.DLV_PRICE, ',', '');
 
     var sql = ""
     var records = new Array();
@@ -327,14 +327,16 @@ router.post('/write', upload.fields([{ name: 'RECIPE' }, { name: 'RECEIPT' }]), 
         }
     }
 
-    // console.log(records);return;
+    // console.log(sql);
+    // console.log(records);
+    // return;
 
     if (idx == null) {
         sql = "INSERT INTO JINLYOBI_tbl SET " + sql + " WDATE = NOW(), LDATE = NOW()";
         db.query(sql, records, async function(err, rows, fields) {
             if (!err) {
                 await new Promise(function(resolve, reject) {
-                    utils.sendPush(res, userId, statusMsg, 'jinlyo_list');
+                    utils.sendPush(null, userId, statusMsg, 'jinlyo_list');
                     resolve();
                 });
                 res.redirect('/rcp/' + token + '?USER_ID=' + userId);
@@ -345,8 +347,10 @@ router.post('/write', upload.fields([{ name: 'RECIPE' }, { name: 'RECEIPT' }]), 
     } else {
         records.push(idx);
         sql = "UPDATE JINLYOBI_tbl SET " + sql + " LDATE = NOW() WHERE IDX = ?";
+
         await db.query(sql, records, function(err, rows, fields) {
             if (!err) {
+                utils.sendPush(res, userId, statusMsg, 'jinlyo_list');
                 res.redirect('/rcp/' + token + '?USER_ID=' + userId);
             } else {
                 res.send(err);
