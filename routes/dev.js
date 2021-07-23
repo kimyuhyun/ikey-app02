@@ -74,19 +74,23 @@ async function checkMiddleWare(req, res, next) {
 
 router.get('/', checkMiddleWare, async function(req, res, next) {
 
+    // var arr = [];
     // await new Promise(function(resolve, reject) {
     //     const sql = ``;
     //     db.query(sql, function(err, rows, fields) {
     //         console.log(rows);
     //         if (!err) {
-    //
+    //             resolve(rows);
     //         } else {
     //             console.log(err);
+    //             res.send(err);
+    //             return;
     //         }
     //     });
     // }).then(function(data) {
-    //
+    //     arr = utils.nvl(data);
     // });
+    // res.send(arr);
 
     res.send('api');
 });

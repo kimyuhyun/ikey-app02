@@ -230,7 +230,7 @@ router.get('/list/:USER_ID', checkMiddleWare, async function(req, res, next) {
             }
         });
     }).then(function(data) {
-        arr = data;
+        arr = utils.nvl(data);
     });
 
     res.send(arr);

@@ -76,6 +76,7 @@ router.get('/jinlyo_list', checkMiddleWare, async function(req, res, next) {
             }
         });
     }).then(function(data) {
+        data = utils.nvl(data);
         res.send(data);
     });
 });

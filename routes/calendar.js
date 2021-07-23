@@ -206,18 +206,28 @@ router.get('/:DOCTOR_ID/:GAP', async function(req, res, next) {
                 }
             });
         }).then(function(data) {
-            data.DATE = date;
-            data.YOIL_CODE = moment(date).day();
+            if (data) {
+                data.DATE = date;
+                data.YOIL_CODE = moment(date).day();
 
-            if (data.S_TM == '00:00' && data.E_TM == '00:00') {
-                data.IS_RESV = false;
-            } else {
-                data.IS_RESV = true;
+                if (data.S_TM == '00:00' && data.E_TM == '00:00') {
+                    data.IS_RESV = false;
+                } else {
+                    data.IS_RESV = true;
+                }
+                obj = data;
             }
-            obj = data;
-
         });
         //
+
+        if (!obj) {
+            res.send({
+                list: [],
+                start_date: startDate,
+            });
+
+            return;
+        }
 
         //오늘 예약 못하게 막기
         if (moment(today).isSame(date)) {
