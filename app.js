@@ -28,6 +28,7 @@ const paymentRouter = require('./routes/payment');
 const certRouter = require('./routes/cert');
 const calendarRouter = require('./routes/calendar');
 const resvRouter = require('./routes/resv');
+const revenueRouter = require('./routes/revenue');
 
 
 const app = express();
@@ -79,6 +80,7 @@ app.use('/payment', paymentRouter);
 app.use('/cert', certRouter);
 app.use('/calendar', calendarRouter);
 app.use('/resv', resvRouter);
+app.use('/revenue', revenueRouter);
 
 
 
