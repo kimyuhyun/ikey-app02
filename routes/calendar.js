@@ -133,10 +133,14 @@ router.get('/get_resv/:doctor_id/:start/:end', async function(req, res, next) {
             await new Promise(function(resolve, reject) {
                 const sql = `
                     SELECT
-                    COUNT(*) as CNT,
-                    (SELECT COUNT(*) FROM MEMB_tbl WHERE ID = A.USER_ID) as IS_MEMBER
-                    FROM JINLYOBI_tbl as A
-                    WHERE A.DOCTOR_ID = ? AND A.DATE1 = ? AND STATUS = 0`;
+                    COUNT(*) as CNT
+                    FROM JINLYOBI_tbl as A, MEMB_tbl as B
+                    WHERE A.USER_ID = B.ID
+                    AND A.DOCTOR_ID = ?
+                    AND A.DATE1 = ? 
+                    AND A.APP_USE_PRICE > 0
+                    AND STATUS > 0
+                `;
                 db.query(sql, [doctor_id, date], function(err, rows, fields) {
                     if (!err) {
                         resolve(rows[0]);
@@ -145,17 +149,11 @@ router.get('/get_resv/:doctor_id/:start/:end', async function(req, res, next) {
                     }
                 });
             }).then(function(data) {
-                if (data.IS_MEMBER == 0) {
-                    obj.RESV_CNT = 0;
-                } else {
-                    obj.RESV_CNT = data.CNT;
-                }
+                obj.RESV_CNT = data.CNT;
             });
         } else {
             obj.RESV_CNT = 0;
         }
-
-
         arr.push(obj);
     }
 

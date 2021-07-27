@@ -48,7 +48,32 @@ async function checkMiddleWare(req, res, next) {
 router.get('/list/:doctor_id', checkMiddleWare, async function(req, res, next) {
     const doctorId = req.params.doctor_id;
 
-    var arr = [];
+    var arr = {};
+
+    await new Promise(function(resolve, reject) {
+        const sql = `
+            SELECT
+            DATE1,
+            SUM(APP_USE_PRICE) as SUM
+            FROM JINLYOBI_tbl
+            WHERE DOCTOR_ID = ?
+            AND APP_USE_PRICE > 0
+            GROUP BY DATE1
+            ORDER BY DATE1 DESC, TIME1 DESC`;
+        db.query(sql, doctorId, function(err, rows, fields) {
+            console.log(rows);
+            if (!err) {
+                resolve(rows);
+            } else {
+                console.log(err);
+                res.send(err);
+                return;
+            }
+        });
+    }).then(function(data) {
+        arr.header = utils.nvl(data);
+    });
+
     await new Promise(function(resolve, reject) {
         const sql = `
             SELECT
@@ -59,7 +84,8 @@ router.get('/list/:doctor_id', checkMiddleWare, async function(req, res, next) {
             (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.USER_ID) as NAME1,
             (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.USER_ID) as USER_THUMB
             FROM JINLYOBI_tbl as A
-            WHERE DOCTOR_ID = ?
+            WHERE A.DOCTOR_ID = ?
+            AND A.APP_USE_PRICE > 0
             AND STATUS = 3
             ORDER BY DATE1 DESC, TIME1 DESC`;
         db.query(sql, doctorId, function(err, rows, fields) {
@@ -73,7 +99,7 @@ router.get('/list/:doctor_id', checkMiddleWare, async function(req, res, next) {
             }
         });
     }).then(function(data) {
-        arr = utils.nvl(data);
+        arr.body = utils.nvl(data);
     });
     res.send(arr);
 });
@@ -110,6 +136,89 @@ router.get('/list/:doctor_id/:idx', checkMiddleWare, async function(req, res, ne
     res.send(arr);
 });
 
+router.get('/export_ava_price/:doctor_id', checkMiddleWare, async function(req, res, next) {
+    const doctor_id = req.params.doctor_id;
+    var ttl_price = 0;
+    var exported_price = 0;
+
+    var arr = {};
+
+    //전체금액 구하고!!
+    await new Promise(function(resolve, reject) {
+        const sql = `
+            SELECT
+            SUM(APP_USE_PRICE) as SUM
+            FROM JINLYOBI_tbl
+            WHERE DOCTOR_ID = ?
+            AND APP_USE_PRICE > 0
+        `;
+        db.query(sql, doctor_id, function(err, rows, fields) {
+            if (!err) {
+                resolve(rows[0]);
+            } else {
+                console.log(err);
+                res.send(err);
+                return;
+            }
+        });
+    }).then(function(data) {
+        if (data.SUM) {
+            ttl_price = data.SUM;
+        }
+    });
+    //
+
+    //출금금액을 구하고!!
+    await new Promise(function(resolve, reject) {
+        const sql = `
+            SELECT
+            SUM(PRICE) as SUM
+            FROM EXPORT_REQ_PRICE_tbl
+            WHERE ID = ?
+        `;
+        db.query(sql, doctor_id, function(err, rows, fields) {
+            if (!err) {
+                resolve(rows[0]);
+            } else {
+                console.log(err);
+                res.send(err);
+                return;
+            }
+        });
+    }).then(function(data) {
+        if (data.SUM) {
+            exported_price = data.SUM;
+        }
+    });
+    //
+    arr.CALC = ttl_price - exported_price;
+
+    res.send(arr);
+});
+
+
+router.get('/export_list/:doctor_id/:flag', checkMiddleWare, async function(req, res, next) {
+    const doctor_id = req.params.doctor_id;
+    const flag = req.params.flag;
+
+    var arr = [];
+    await new Promise(function(resolve, reject) {
+        const sql = `SELECT * FROM EXPORT_REQ_PRICE_tbl WHERE ID = ? AND IS_COMPLETED = ? ORDER BY WDATE DESC`;
+        db.query(sql, [doctor_id, flag], function(err, rows, fields) {
+            if (!err) {
+                resolve(rows);
+            } else {
+                console.log(err);
+                res.send(err);
+                return;
+            }
+        });
+    }).then(function(data) {
+        arr = utils.nvl(data);
+    });
+    res.send(arr);
+
+});
 
 router.get('/', checkMiddleWare, async function(req, res, next) {
 

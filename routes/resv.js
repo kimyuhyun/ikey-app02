@@ -254,6 +254,8 @@ router.get('/doctor_resv_detail/:DATE/:DOCTOR_ID', checkMiddleWare, async functi
             WHERE A.DOCTOR_ID = ?
             AND A.DATE1 = ?
             AND A.ROOM_KEY != ''
+            AND A.APP_USE_PRICE > 0
+            AND STATUS > 0
             ORDER BY DATE1 ASC, TIME1 ASC
         `;
         db.query(sql, [doctor_id, date], function(err, rows, fields) {
