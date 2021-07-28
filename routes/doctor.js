@@ -87,7 +87,6 @@ router.get('/list', checkMiddleWare, async function(req, res, next) {
                 ID,
                 NAME1,
                 FILENAME0,
-                SOGE,
                 HOSPITAL,
                 CATEGORYS,
                 (SELECT COUNT(*) FROM DOCTOR_FAVORITE_tbl WHERE DOCTOR_ID = A.ID) as FAV_CNT

@@ -118,6 +118,7 @@ router.post('/set_resv', checkMiddleWare, async function(req, res, next) {
     }
 
     res.send({
+        code: 1,
         msg: '정상적으로 예약 되었습니다.',
     });
 
@@ -219,7 +220,7 @@ router.get('/list/:USER_ID', checkMiddleWare, async function(req, res, next) {
             WHERE A.USER_ID = ?
             AND A.STATUS < 4
             AND A.ROOM_KEY != ''
-            ORDER BY DATE1 ASC, TIME1 ASC
+            ORDER BY DATE1 DESC, TIME1 DESC
         `;
         db.query(sql, userId, function(err, rows, fields) {
             console.log(rows);
