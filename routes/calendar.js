@@ -137,9 +137,9 @@ router.get('/get_resv/:doctor_id/:start/:end', async function(req, res, next) {
                     FROM JINLYOBI_tbl as A, MEMB_tbl as B
                     WHERE A.USER_ID = B.ID
                     AND A.DOCTOR_ID = ?
-                    AND A.DATE1 = ? 
+                    AND A.DATE1 = ?
                     AND A.APP_USE_PRICE > 0
-                    AND STATUS > 0
+                    AND STATUS > -1
                 `;
                 db.query(sql, [doctor_id, date], function(err, rows, fields) {
                     if (!err) {
