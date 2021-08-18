@@ -238,6 +238,7 @@ router.get('/list/:USER_ID', checkMiddleWare, async function(req, res, next) {
 });
 
 
+//중요
 router.get('/doctor_resv_detail/:DATE/:DOCTOR_ID', checkMiddleWare, async function(req, res, next) {
     const date = req.params.DATE;
     const doctor_id = req.params.DOCTOR_ID;
