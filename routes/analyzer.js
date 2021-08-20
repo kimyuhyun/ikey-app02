@@ -208,17 +208,23 @@ router.post('/liveuser', checkMiddleWare, function(req, res, next) {
             }).then(function(data) {
                 try {
                     if (file != 'dummy') {
-                        var tmp = data.split('|S|');
-                        console.log(data);
-                        moment.tz.setDefault("Asia/Seoul");
-                        var connTime = moment.unix(tmp[0] / 1000).format('YYYY-MM-DD HH:mm');
-                        var minDiff = moment.duration(moment(new Date()).diff(moment(connTime))).asMinutes();
-                        if (minDiff > 4) {
-                            console.log(minDiff);
-                            fs.unlink('./liveuser/' + file, function(err) {
-                                console.log(err);
-                            });
-                        }
+                        await new Promise(function(resolve, reject) {
+                            var tmp = data.split('|S|');
+                            console.log(data);
+                            moment.tz.setDefault("Asia/Seoul");
+                            var connTime = moment.unix(tmp[0] / 1000).format('YYYY-MM-DD HH:mm');
+                            var minDiff = moment.duration(moment(new Date()).diff(moment(connTime))).asMinutes();
+                            if (minDiff > 4) {
+                                console.log(minDiff);
+                                fs.unlink('./liveuser/' + file, function(err) {
+                                    console.log(err);
+                                    resolve();
+                                });
+                            } else {
+                                resolve();
+                            }
+                        }).then();
+
                         arr.push({
                             'id': file,
                             'url': tmp[1],

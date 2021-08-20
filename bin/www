@@ -34,6 +34,20 @@ server.listen(port, '0.0.0.0', function() {
     }, 5000);
     //
 
+    var os = require('os');
+    var ifaces = os.networkInterfaces();
+    var result = '';
+    for (var dev in ifaces) {
+        var alias = 0;
+        ifaces[dev].forEach(function(details) {
+            if (details.family == 'IPv4' && details.internal === false) {
+                result = details.address;
+                ++alias;
+            }
+        });
+    }
+    console.log(result);
+
 });
 server.on('error', onError);
 server.on('listening', onListening);
