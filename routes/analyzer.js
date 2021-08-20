@@ -205,7 +205,7 @@ router.post('/liveuser', checkMiddleWare, function(req, res, next) {
                 fs.readFile('./liveuser/' + file, 'utf8', function(err, data) {
                     resolve(data);
                 });
-            }).then(function(data) {
+            }).then(async function(data) {
                 try {
                     if (file != 'dummy') {
                         await new Promise(function(resolve, reject) {
