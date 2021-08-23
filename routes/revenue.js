@@ -87,7 +87,7 @@ router.get('/list/:doctor_id', checkMiddleWare, async function(req, res, next) {
             FROM JINLYOBI_tbl as A
             WHERE A.DOCTOR_ID = ?
             AND A.APP_USE_PRICE > 0
-            AND STATUS = 3
+            AND STATUS >= 3
             ORDER BY DATE1 DESC, TIME1 DESC`;
         db.query(sql, doctorId, function(err, rows, fields) {
             console.log(rows);
@@ -152,7 +152,7 @@ router.get('/export_ava_price/:doctor_id', checkMiddleWare, async function(req, 
             FROM JINLYOBI_tbl
             WHERE DOCTOR_ID = ?
             AND APP_USE_PRICE > 0
-            AND STATUS >= 3 
+            AND STATUS >= 3
         `;
         db.query(sql, doctor_id, function(err, rows, fields) {
             if (!err) {

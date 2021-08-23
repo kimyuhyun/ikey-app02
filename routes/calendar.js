@@ -107,15 +107,15 @@ router.get('/get_resv/:doctor_id/:start/:end', async function(req, res, next) {
         // console.log('is_dt', is_dt);
 
         if (!is_dt) {
-            // // 오늘 예약 못하게 막기
-            // if (moment(today).isSame(date)) {
-            //     obj.IS_RESV = false;
-            // }
-            //
-            // //이전날 예약 못하게 막기
-            // if (!moment(today).isBefore(date)) {
-            //     obj.IS_RESV = false;
-            // }
+            // 오늘 예약 못하게 막기
+            if (moment(today).isSame(date)) {
+                obj.IS_RESV = false;
+            }
+
+            //이전날 예약 못하게 막기
+            if (!moment(today).isBefore(date)) {
+                obj.IS_RESV = false;
+            }
         }
 
 
@@ -227,18 +227,18 @@ router.get('/:DOCTOR_ID/:GAP', async function(req, res, next) {
             return;
         }
 
-        // //오늘 예약 못하게 막기
-        // if (moment(today).isSame(date)) {
-        //     obj.IS_RESV = false;
-        // }
-        // //
+        //오늘 예약 못하게 막기
+        if (moment(today).isSame(date)) {
+            obj.IS_RESV = false;
+        }
         //
-        // //이전날 예약 못하게 막기
-        // if (!moment(today).isBefore(date)) {
-        //     console.log(today, date);
-        //     obj.IS_RESV = false;
-        // }
-        // //
+
+        //이전날 예약 못하게 막기
+        if (!moment(today).isBefore(date)) {
+            console.log(today, date);
+            obj.IS_RESV = false;
+        }
+        //
 
         //예약자수 가져오기!
         if (obj.IS_RESV) {
