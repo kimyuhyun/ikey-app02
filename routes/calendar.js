@@ -113,9 +113,9 @@ router.get('/get_resv/:doctor_id/:start/:end', async function(req, res, next) {
             // }
 
             //이전날 예약 못하게 막기
-            if (!moment(today).isBefore(date)) {
-                obj.IS_RESV = false;
-            }
+            // if (!moment(today).isBefore(date)) {
+            //     obj.IS_RESV = false;
+            // }
         }
 
 
