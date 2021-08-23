@@ -108,9 +108,9 @@ router.get('/get_resv/:doctor_id/:start/:end', async function(req, res, next) {
 
         if (!is_dt) {
             // 오늘 예약 못하게 막기
-            if (moment(today).isSame(date)) {
-                obj.IS_RESV = false;
-            }
+            // if (moment(today).isSame(date)) {
+            //     obj.IS_RESV = false;
+            // }
 
             //이전날 예약 못하게 막기
             if (!moment(today).isBefore(date)) {
@@ -288,7 +288,7 @@ router.get('/resv_detail/:DOCTOR_ID/:DATE', async function(req, res, next) {
 
     //진료시간 가져오기
     await new Promise(function(resolve, reject) {
-        var sql = `SELECT S_TM, E_TM, H_S_TM, H_E_TM FROM JINLYO_TIME_tbl WHERE ID = ? AND YOIL = ?`;
+        var sql = `SELECT S_TM, E_TM, H_S_TM, H_E_TM, RESV_TYPE FROM JINLYO_TIME_tbl WHERE ID = ? AND YOIL = ?`;
         db.query(sql, [doctorId, yoil], function(err, rows, fields) {
             console.log(rows[0]);
             if (!err) {
@@ -354,7 +354,37 @@ router.get('/resv_detail/:DOCTOR_ID/:DATE', async function(req, res, next) {
     res.send(arr);
 });
 
+router.get('/get_resv_type/:DOCTOR_ID/:DATE', checkMiddleWare, async function(req, res, next) {
+    const doctorId = req.params.DOCTOR_ID;
+    const date = req.params.DATE;
+
+    var isHoliday = holidayKR.isSolarHoliday(date.split('-')[0], date.split('-')[1], date.split('-')[2]);
+    var yoil = moment(date).format('ddd').toUpperCase();
+    if (isHoliday && yoil != 'SUN') {
+        yoil = 'HOL';
+    }
+
+    var obj = {};
+
+    //진료시간 가져오기
+    await new Promise(function(resolve, reject) {
+        var sql = `SELECT RESV_TYPE FROM JINLYO_TIME_tbl WHERE ID = ? AND YOIL = ?`;
+        db.query(sql, [doctorId, yoil], function(err, rows, fields) {
+            console.log(rows[0]);
+            if (!err) {
+                resolve(rows[0]);
+            } else {
+                console.log(err);
+            }
+        });
+    }).then(function(data) {
+        obj = utils.nvl(data);
+    });
+    res.send(obj);
+});
+
 router.get('/', checkMiddleWare, async function(req, res, next) {
+    console.log(global.CURRENT_URL);
 
     // await new Promise(function(resolve, reject) {
     //     var sql = ``;

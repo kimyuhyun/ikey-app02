@@ -46,6 +46,9 @@ server.listen(port, '0.0.0.0', function() {
             }
         });
     }
+
+    global.HOST_ADDR = result + ':3000';
+
     console.log(result);
 
 });

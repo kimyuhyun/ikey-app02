@@ -273,14 +273,14 @@ router.get('/get_jinlyi_time/:DOCTOR_ID', async function(req, res, next) {
             }
         });
     }).then(function(data) {
-        arr = data;
+        arr = utils.nvl(data);
     });
 
     var gbn = '';
     await new Promise(function(resolve, reject) {
         resolve(getJinlyoGbn(doctorId));
     }).then(function(data) {
-        gbn = data;
+        gbn = utils.nvl(data);
     });
 
 

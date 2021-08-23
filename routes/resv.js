@@ -248,7 +248,15 @@ router.get('/doctor_resv_detail/:DATE/:DOCTOR_ID', checkMiddleWare, async functi
     await new Promise(function(resolve, reject) {
         const sql = `
             SELECT
-            A.*,
+            A.IDX,
+            A.ROOM_KEY,
+            A.USER_ID,
+            A.DOCTOR_ID,
+            A.DATE1,
+            A.TIME1,
+            A.STATUS,
+            A.STATUS_MSG,
+            A.IS_CALL,
             (SELECT FILENAME0 FROM MEMB_tbl WHERE ID = A.USER_ID) as USER_THUMB,
             (SELECT NAME1 FROM MEMB_tbl WHERE ID = A.USER_ID) as USER_NAME,
             (SELECT HP FROM MEMB_tbl WHERE ID = A.USER_ID) as HP
