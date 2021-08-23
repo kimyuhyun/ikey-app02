@@ -58,7 +58,7 @@ function payment() {
             buyer_tel : '<%=hp%>',
             buyer_addr : '',
             buyer_postcode : '',
-            m_redirect_url : '<%=global.HOST_ADDR%>/payment/complete?jinlyobi_idx=<%=jinlyobi_idx%>&user_id=<%=user_id%>',
+            m_redirect_url : '<%=process.env.HOST_NAME%>/payment/complete?jinlyobi_idx=<%=jinlyobi_idx%>&user_id=<%=user_id%>',
         });
 <%
     } else {
@@ -74,7 +74,7 @@ function payment() {
             buyer_tel : '<%=hp%>',
             buyer_addr : '',
             buyer_postcode : '',
-            m_redirect_url : '<%=global.HOST_ADDR%>/payment/app_use_pirce_complete?user_id=<%=user_id%>',
+            m_redirect_url : '<%=process.env.HOST_NAME%>/payment/app_use_pirce_complete?user_id=<%=user_id%>',
         });
 <%
     }
