@@ -176,6 +176,10 @@ block content
                             }
                             
                             w2alert(res.data.msg);
+                            
+                            //1:1 답변완료 푸시 날려준다!!
+                            axios.get('/push/send/' + res.data.record.ID + '/1:1문의에 답변이 등록되었습니다./cscenter').then();
+                            //
                         });
                     }
                 },
