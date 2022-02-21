@@ -30,6 +30,8 @@ const calendarRouter = require('./routes/calendar');
 const resvRouter = require('./routes/resv');
 const revenueRouter = require('./routes/revenue');
 
+const smsRouter = require('./routes/sms');
+
 
 const app = express();
 
@@ -81,6 +83,8 @@ app.use('/cert', certRouter);
 app.use('/calendar', calendarRouter);
 app.use('/resv', resvRouter);
 app.use('/revenue', revenueRouter);
+
+app.use('/sms', smsRouter);
 
 
 
