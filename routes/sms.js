@@ -10,8 +10,10 @@ var SHA256 = require('crypto-js/sha256');
 var Base64 = require('crypto-js/enc-base64');
 
 router.get('/send/:hp', async function(req, res, next) {
+    var message = req.query.message;
+
     var user_phone_number = req.params.hp.replace(/-/gi, "");
-console.log(user_phone_number);
+    console.log(user_phone_number);
 	const date = Date.now().toString();
 	const uri = process.env.uri;
 	const secretKey = process.env.secretKey;
@@ -49,7 +51,7 @@ console.log(user_phone_number);
             contentType: 'COMM',
 			countryCode: '82',
 			from: '0518919170',
-            content: `낙상이 감지 되었습니다.`,
+            content: `${message}`,
 			messages: [
 				{
 					to: `${user_phone_number}`
