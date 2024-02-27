@@ -28,28 +28,34 @@ app.io.attach(server); // 추가됨
 server.listen(port, '0.0.0.0', function() {
 
     //추가됨!
-    setInterval(function () {
-        db.query('SELECT 1');
-        // console.log('SELECT 1');
-    }, 5000);
+    // setInterval(function () {
+    //     db.query('SELECT 1');
+    //     // console.log('SELECT 1');
+    // }, 5000);
     //
 
-    var os = require('os');
+    var os = require("os");
     var ifaces = os.networkInterfaces();
-    var result = '';
+    var result = "";
+    var alias = 0;
     for (var dev in ifaces) {
-        var alias = 0;
-        ifaces[dev].forEach(function(details) {
-            if (details.family == 'IPv4' && details.internal === false) {
+        ifaces[dev].forEach(function (details) {
+            if (details.family == "IPv4" && details.internal === false && details.address.startsWith("172")) {
                 result = details.address;
-                ++alias;
+                alias++;
             }
         });
+        if (alias === 0) {
+            ifaces[dev].forEach(function (details) {
+                if (details.family == "IPv4" && details.internal === false && details.address.startsWith("192")) {
+                    result = details.address;
+                    alias++;
+                }
+            });
+        }
     }
-
-    global.HOST_ADDR = result + ':3000';
-
-    console.log(result);
+    console.log(process.env.NODE_ENV);
+    console.log(`http://${result}:${port}`);
 
 });
 server.on('error', onError);

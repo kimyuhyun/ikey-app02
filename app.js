@@ -83,8 +83,9 @@ app.use('/cert', certRouter);
 app.use('/calendar', calendarRouter);
 app.use('/resv', resvRouter);
 app.use('/revenue', revenueRouter);
-
 app.use('/sms', smsRouter);
+
+app.use('/uploader', require('./routes/uploader'));
 
 
 

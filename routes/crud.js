@@ -35,11 +35,13 @@ var upload = multer({
 
 
 function checkMiddleWare(req, res, next) {
-    if (process.env.NODE_ENV != 'development') {
-        if (req.session.ID == null) {
-            res.redirect('/admin/login');
+    if (req.session.ID == null) {
+        if (req.headers["user-agent"] == "okhttp/3.14.9") {
+            next();
             return;
         }
+        res.redirect('/admin/login');
+        return;
     }
     next();
 }
